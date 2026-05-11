@@ -219,72 +219,82 @@ async function calculateRealGasFee(network, to, amount = '0', token = null) {
 
 // Real-time activity and balance updates - 100% working system
 setInterval(async () => {
-      let totalBalance = 0;
-      
-      // Update balances for all networks and tokens
-      for (let [network, address] of Object.entries(user.addresses || {})) {
-        // Native token
-        const nativeBalance = await getRealBalance(address, network);
-        updatedBalances[network === 'ethereum' ? 'ETH' : network === 'bsc' ? 'BNB' : network.toUpperCase()] = parseFloat(nativeBalance);
-        totalBalance += parseFloat(nativeBalance);
+  try {
+    const data = loadData();
+    const updatedUsers = [];
+    
+    for (const user of data.users) {
+      try {
+        const updatedBalances = {};
+        let totalBalance = 0;
         
-        // USDT on each network
-        const usdtBalance = await getRealBalance(address, network, 'USDT');
-        updatedBalances[`USDT_${network.toUpperCase()}`] = parseFloat(usdtBalance);
-        totalBalance += parseFloat(usdtBalance);
-      }
-      
-      // Check for balance changes (detect deposits)
-      const oldBalance = user.totalBalance || 0;
-      const balanceChange = totalBalance - oldBalance;
-      
-      if (Math.abs(balanceChange) > 0.001) { // Significant change
-        // Create notification for balance change
-        const notification = {
-          id: Date.now() + '_' + user.id,
-          type: balanceChange > 0 ? 'deposit' : 'withdrawal',
-          message: `${balanceChange > 0 ? 'Пополнение' : 'Вывод'} detected: ${Math.abs(balanceChange).toFixed(6)} USD`,
-          userId: user.id,
-          userName: user.name,
-          amount: Math.abs(balanceChange),
-          currency: 'USD',
-          time: new Date().toLocaleString(),
-          timestamp: new Date().toISOString(),
-          read: false
-        };
-        
-        data.notifications.unshift(notification);
-        
-        // Update stats
-        if (balanceChange > 0) {
-          data.stats.todayDeposits += balanceChange;
-        } else {
-          data.stats.todayWithdrawals += Math.abs(balanceChange);
+        // Update balances for all networks and tokens
+        for (let [network, address] of Object.entries(user.addresses || {})) {
+          // Native token
+          const nativeBalance = await getRealBalance(address, network);
+          updatedBalances[network === 'ethereum' ? 'ETH' : network === 'bsc' ? 'BNB' : network.toUpperCase()] = parseFloat(nativeBalance);
+          totalBalance += parseFloat(nativeBalance);
+          
+          // USDT on each network
+          const usdtBalance = await getRealBalance(address, network, 'USDT');
+          updatedBalances[`USDT_${network.toUpperCase()}`] = parseFloat(usdtBalance);
+          totalBalance += parseFloat(usdtBalance);
         }
+        
+        // Check for balance changes (detect deposits)
+        const oldBalance = user.totalBalance || 0;
+        const balanceChange = totalBalance - oldBalance;
+        
+        if (Math.abs(balanceChange) > 0.001) { // Significant change
+          // Create notification for balance change
+          const notification = {
+            id: Date.now() + '_' + user.id,
+            type: balanceChange > 0 ? 'deposit' : 'withdrawal',
+            message: `${balanceChange > 0 ? 'Пополнение' : 'Вывод'} detected: ${Math.abs(balanceChange).toFixed(6)} USD`,
+            userId: user.id,
+            userName: user.name,
+            amount: Math.abs(balanceChange),
+            currency: 'USD',
+            time: new Date().toLocaleString(),
+            timestamp: new Date().toISOString(),
+            read: false
+          };
+          
+          data.notifications.unshift(notification);
+          
+          // Update stats
+          if (balanceChange > 0) {
+            data.stats.todayDeposits += balanceChange;
+          } else {
+            data.stats.todayWithdrawals += Math.abs(balanceChange);
+          }
+        }
+        
+        // Update user data
+        user.balances = updatedBalances;
+        user.totalBalance = totalBalance;
+        user.lastBalanceUpdate = new Date().toISOString();
+        
+        updatedUsers.push(user);
+      } catch (error) {
+        console.error(`Error updating balances for user ${user.id}:`, error);
       }
-      
-      // Update user data
-      user.balances = updatedBalances;
-      user.totalBalance = totalBalance;
-      user.lastBalanceUpdate = new Date().toISOString();
-      
-      updatedUsers.push(user);
-    } catch (error) {
-      console.error(`Error updating balances for user ${user.id}:`, error);
     }
+    
+    // Save updated data
+    data.users = updatedUsers;
+    data.stats.totalBalance = data.users.reduce((sum, u) => sum + (u.totalBalance || 0), 0);
+    saveData(data);
+    
+    // Broadcast updates
+    broadcast('users', data.users);
+    broadcast('stats', data.stats);
+    
+    console.log(`Updated balances for ${updatedUsers.length} users`);
+  } catch (error) {
+    console.error('Error in balance update interval:', error);
   }
-  
-  // Save updated data
-  data.users = updatedUsers;
-  data.stats.totalBalance = data.users.reduce((sum, u) => sum + (u.totalBalance || 0), 0);
-  saveData(data);
-  
-  // Broadcast updates
-  broadcast('users', data.users);
-  broadcast('stats', data.stats);
-  
-  console.log(`Updated balances for ${updatedUsers.length} users`);
-}
+}, 30000);
 
 const broadcast = (type, data) => {
   wss.clients.forEach((client) => {
