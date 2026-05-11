@@ -126,14 +126,18 @@ function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const tg = window.Telegram?.WebApp;
-    if (tg) {
-      tg.ready();
-      tg.expand();
-      tg.setHeaderColor('#1a1a1a');
-      tg.setBackgroundColor('#0f0f0f');
-    }
     loadRealData();
+    
+    // Set up WebSocket for real-time updates
+    const ws = new WebSocket('ws://localhost:3002');
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.type === 'new_user' || data.type === 'users_updated') {
+        loadRealData();
+      }
+    };
+    
+    return () => ws.close();
   }, []);
 
   const loadRealData = async () => {
@@ -158,85 +162,16 @@ function App() {
     }
   };
 
-  // Real-time data refresh
   const refreshRealTimeData = async () => {
     try {
-      // Trigger balance updates on server
-      await fetch('/api/refresh-balances', { method: 'POST' });
-      
-      // Reload data
-      await loadRealData();
+      const response = await fetch('/api/refresh-balances', { method: 'POST' });
+      if (response.ok) {
+        await loadRealData();
+      }
     } catch (error) {
       console.error('Error refreshing real-time data:', error);
     }
   };
-
-  const mockUsers = [
-    {
-      id: 1,
-      name: 'John Doe',
-      email: 'john@example.com',
-      telegram: '@johndoe',
-      avatar: '👤',
-      level: 'Gold',
-      isOnline: true,
-      lastActivity: '2 min ago',
-      balances: { USD: 5000, ETH: 2.5, BTC: 0.1, USDT: 3000 }
-    },
-    {
-      id: 2,
-      name: 'Jane Smith',
-      email: 'jane@example.com',
-      telegram: '@janesmith',
-      avatar: '👩',
-      level: 'Platinum',
-      isOnline: true,
-      lastActivity: '5 min ago',
-      balances: { USD: 12000, ETH: 5.2, BTC: 0.3, USDT: 8000 }
-    },
-    {
-      id: 3,
-      name: 'Bob Johnson',
-      email: 'bob@example.com',
-      telegram: '@bobjohnson',
-      avatar: '👨',
-      level: 'Silver',
-      isOnline: false,
-      lastActivity: '1 hour ago',
-      balances: { USD: 3000, ETH: 1.1, BTC: 0.05, USDT: 2000 }
-    }
-  ];
-
-  const mockStats = {
-    totalUsers: 1247,
-    totalBalance: 2847500,
-    todayDeposits: 125000,
-    todayWithdrawals: 87000
-  };
-
-  const mockNotifications = [
-    {
-      id: 1,
-      message: 'New user registration: Alice Cooper',
-      time: '2 min ago',
-      read: false,
-      icon: <UsersIcon />
-    },
-    {
-      id: 2,
-      message: 'Large withdrawal processed: $50,000',
-      time: '15 min ago',
-      read: false,
-      icon: <ArrowUpIcon />
-    },
-    {
-      id: 3,
-      message: 'System maintenance completed',
-      time: '1 hour ago',
-      read: true,
-      icon: <ZapIcon />
-    }
-  ];
 
   const toggleUserSelection = (userId) => {
     setSelectedUsers(prev => 
@@ -261,13 +196,6 @@ function App() {
     }));
   };
 
-  const updateCommonAddress = (currency, address) => {
-    setCommonAddresses(prev => ({
-      ...prev,
-      [currency]: address
-    }));
-  };
-
   const processWithdrawal = async () => {
     try {
       const selectedUsersData = users.filter(user => selectedUsers.includes(user.id));
@@ -280,65 +208,25 @@ function App() {
         for (const [currency, amount] of Object.entries(userData)) {
           if (!amount || parseFloat(amount) <= 0) continue;
           
-          const address = commonAddresses[currency];
-          if (!address) {
-            console.error(`No address set for ${currency}`);
-            failedCount++;
-            continue;
-          }
-
-          // Determine network based on currency
-          let network = 'ethereum';
-          if (currency === 'BNB') network = 'bsc';
-          else if (currency === 'SOL') network = 'solana';
-          else if (currency === 'TON') network = 'ton';
-          else if (currency.includes('USDT')) {
-            if (currency.includes('BSC')) network = 'bsc';
-            else if (currency.includes('ARB')) network = 'arbitrum';
-            else network = 'ethereum';
-          }
-
-          // Get private key for the user (in production, this should be securely retrieved)
-          const privateKey = prompt(`Введите приватный ключ для ${user.name} (${currency}):`);
-          if (!privateKey) {
-            failedCount++;
-            continue;
-          }
-
           try {
             const response = await fetch('/api/withdraw', {
               method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
+              headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 userId: user.id,
-                amount: parseFloat(amount),
                 currency,
-                address,
-                network,
-                privateKey
+                amount: parseFloat(amount),
+                address: commonAddresses[currency]
               })
             });
-
-            const result = await response.json();
             
-            if (result.success) {
+            if (response.ok) {
               processedCount++;
-              console.log(`Withdrawal processed for ${user.name}: ${amount} ${currency}`);
-              
-              if (result.transaction?.txHash) {
-                alert(`Транзакция отправлена: ${result.transaction.txHash}`);
-              }
             } else {
               failedCount++;
-              console.error(`Withdrawal failed for ${user.name}:`, result.error);
-              alert(`Ошибка вывода для ${user.name}: ${result.error}`);
             }
-          } catch (txError) {
+          } catch (error) {
             failedCount++;
-            console.error(`Transaction error for ${user.name}:`, txError);
-            alert(`Ошибка транзакции для ${user.name}: ${txError.message}`);
           }
         }
       }
@@ -354,26 +242,8 @@ function App() {
       await loadRealData();
       
     } catch (error) {
-      console.error('Withdrawal process error:', error);
-      alert('Ошибка процесса вывода. Пожалуйста, попробуйте снова.');
-    }
-  };
-
-  const markNotificationAsRead = async (notificationId) => {
-    try {
-      await fetch(`/api/notifications/${notificationId}/read`, {
-        method: 'POST'
-      });
-      
-      setNotifications(prev => 
-        prev.map(notif => 
-          notif.id === notificationId 
-            ? { ...notif, read: true }
-            : notif
-        )
-      );
-    } catch (error) {
-      console.error('Error marking notification as read:', error);
+      console.error('Error processing withdrawal:', error);
+      alert('Ошибка при обработке вывода');
     }
   };
 
@@ -392,25 +262,24 @@ function App() {
     <button
       onClick={() => setActiveTab(id)}
       style={{
-        padding: window.innerWidth < 768 ? '8px 12px' : '12px 20px',
-        border: 'none',
+        flex: 1,
+        padding: window.innerWidth < 768 ? '12px 8px' : '16px 12px',
         background: isActive ? '#3b82f6' : 'transparent',
+        border: 'none',
+        borderRadius: '12px',
         color: isActive ? '#ffffff' : '#9ca3af',
+        fontWeight: '600',
         fontSize: window.innerWidth < 768 ? '12px' : '14px',
-        fontWeight: '500',
         cursor: 'pointer',
-        borderRadius: '6px',
         transition: 'all 0.2s ease',
-        fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
         display: 'flex',
         alignItems: 'center',
-        gap: window.innerWidth < 768 ? '4px' : '8px',
-        whiteSpace: 'nowrap',
-        flexShrink: 0
+        justifyContent: 'center',
+        gap: '8px'
       }}
     >
-      <Icon size={window.innerWidth < 768 ? 16 : 20} />
-      {label && <span>{label}</span>}
+      <Icon size={window.innerWidth < 768 ? 16 : 18} />
+      {label}
     </button>
   );
 
@@ -418,60 +287,42 @@ function App() {
     <div
       style={{
         background: '#1f2937',
+        borderRadius: '16px',
+        padding: '20px',
         border: '1px solid #374151',
-        borderRadius: window.innerWidth < 768 ? '8px' : '12px',
-        padding: window.innerWidth < 768 ? '16px' : '20px',
+        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
         flex: 1,
-        color: '#f9fafb',
-        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.3)',
-        minWidth: window.innerWidth < 768 ? '140px' : 'auto'
+        minWidth: '0'
       }}
     >
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: window.innerWidth < 768 ? '8px' : '12px',
-        marginBottom: '12px'
-      }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
         <div style={{
-          background: '#374151',
-          borderRadius: '6px',
-          padding: window.innerWidth < 768 ? '6px' : '8px',
-          color: '#9ca3af'
+          width: '48px',
+          height: '48px',
+          borderRadius: '12px',
+          background: '#3b82f6',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: '#ffffff'
         }}>
-          <Icon size={window.innerWidth < 768 ? 16 : 20} />
+          <Icon size={24} />
         </div>
-        <div style={{
-          fontSize: window.innerWidth < 768 ? '12px' : '14px',
-          fontWeight: '500',
-          fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
-          color: '#9ca3af',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap'
-        }}>
-          {title}
+        <div style={{ flex: 1 }}>
+          <h3 style={{ margin: 0, fontSize: '14px', color: '#9ca3af', fontWeight: '500' }}>{title}</h3>
+          <p style={{ margin: 0, fontSize: '24px', color: '#ffffff', fontWeight: '700' }}>{value}</p>
         </div>
       </div>
-      <div style={{
-        fontSize: window.innerWidth < 768 ? '18px' : '24px',
-        fontWeight: '700',
-        marginBottom: '8px',
-        fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        whiteSpace: 'nowrap'
-      }}>
-        {value}
-      </div>
-      {change && (
+      {change !== undefined && (
         <div style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '4px',
-          fontSize: window.innerWidth < 768 ? '12px' : '14px',
-          fontWeight: '500',
-          fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
+          gap: '6px',
+          fontSize: '12px',
+          fontWeight: '600',
+          padding: '4px 8px',
+          borderRadius: '6px',
+          backgroundColor: change > 0 ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
           color: change > 0 ? '#10b981' : '#ef4444'
         }}>
           {change > 0 ? <TrendingUpIcon size={12} /> : <TrendingUpIcon size={12} style={{ transform: 'rotate(180deg)' }} />}
@@ -481,159 +332,152 @@ function App() {
     </div>
   );
 
-  const UserCard = ({ user }) => (
-    <div
-      style={{
-        background: '#1f2937',
-        border: selectedUsers.includes(user.id) ? '2px solid #3b82f6' : '1px solid #374151',
-        borderRadius: window.innerWidth < 768 ? '8px' : '12px',
-        padding: window.innerWidth < 768 ? '16px' : '20px',
-        marginBottom: '16px',
-        position: 'relative',
-        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.3)',
-        color: '#f9fafb'
-      }}
-    >
-      <div style={{
-        position: 'absolute',
-        top: window.innerWidth < 768 ? '12px' : '20px',
-        right: window.innerWidth < 768 ? '12px' : '20px',
-        display: 'flex',
-        gap: '8px',
-        alignItems: 'center'
-      }}>
-        <div style={{
-          width: '8px',
-          height: '8px',
-          borderRadius: '50%',
-          background: user.isOnline ? '#10b981' : '#6b7280'
-        }} />
-        <input
-          type="checkbox"
-          checked={selectedUsers.includes(user.id)}
-          onChange={() => toggleUserSelection(user.id)}
-          style={{
-            cursor: 'pointer',
-            width: '16px',
-            height: '16px'
-          }}
-        />
-      </div>
-      
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '12px',
-        marginBottom: '12px'
-      }}>
-        <div style={{
-          fontSize: '24px',
-          width: '40px',
-          height: '40px',
-          borderRadius: '50%',
-          background: '#374151',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}>
-          {user.avatar}
-        </div>
-        <div>
-          <div style={{
-            fontSize: '16px',
-            fontWeight: '600',
-            fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
-          }}>
-            {user.name}
-          </div>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            fontSize: '12px',
-            fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
-            color: '#9ca3af'
-          }}>
-            <ClockIcon />
-            <span>{user.lastActivity}</span>
-            <span style={{
-              background: '#374151',
-              padding: '2px 8px',
-              borderRadius: '12px',
-              fontSize: '10px',
-              fontWeight: '600',
-              color: '#d1d5db'
+  const UserCard = ({ user }) => {
+    const showUserDetails = () => {
+      alert(`👤 ${user.name} (@${user.telegram})\n\n💰 Balance: $${(user.totalBalance || 0).toLocaleString()}\n🏆 Level: ${user.level || 'Bronze'}\n📱 Status: ${user.isOnline ? '🟢 Online' : '🔴 Offline'}\n⏰ Last Activity: ${user.lastActivity || 'Unknown'}\n📅 Created: ${new Date(user.createdAt || Date.now()).toLocaleDateString()}\n\n💼 Wallets:\n${user.addresses ? Object.entries(user.addresses).map(([net, addr]) => `${net.toUpperCase()}: ${addr.slice(0, 8)}...${addr.slice(-6)}`).join('\n') : 'No wallets'}`);
+    };
+
+    return (
+      <div
+        style={{
+          background: '#1f2937',
+          border: selectedUsers.includes(user.id) ? '2px solid #3b82f6' : '1px solid #374151',
+          borderRadius: window.innerWidth < 768 ? '8px' : '12px',
+          padding: window.innerWidth < 768 ? '16px' : '20px',
+          marginBottom: '16px',
+          position: 'relative',
+          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.3)',
+          transition: 'all 0.2s ease',
+          cursor: 'pointer'
+        }}
+        onClick={() => toggleUserSelection(user.id)}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+          <div style={{ fontSize: '24px' }}>{user.avatar}</div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '8px',
+              marginBottom: '4px'
             }}>
-              {user.level}
-            </span>
-          </div>
-          {user.telegram && (
-            <div style={{
-              fontSize: '12px',
-              color: '#60a5fa',
-              marginTop: '4px',
-              fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
+              <h3 style={{ 
+                margin: 0, 
+                fontSize: window.innerWidth < 768 ? '16px' : '18px',
+                fontWeight: '600',
+                color: '#ffffff',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap'
+              }}>
+                {user.name}
+              </h3>
+              <div style={{
+                width: '8px',
+                height: '8px',
+                borderRadius: '50%',
+                background: user.isOnline ? '#10b981' : '#6b7280'
+              }} />
+            </div>
+            <p style={{ 
+              margin: 0, 
+              fontSize: '14px', 
+              color: '#9ca3af',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap'
             }}>
               {user.telegram}
-            </div>
-          )}
+            </p>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                showUserDetails();
+              }}
+              style={{
+                background: '#374151',
+                border: '1px solid #4b5563',
+                borderRadius: '6px',
+                padding: '6px',
+                cursor: 'pointer',
+                color: '#9ca3af',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+              title="View Details"
+            >
+              <EyeIcon />
+            </button>
+            <input
+              type="checkbox"
+              checked={selectedUsers.includes(user.id)}
+              onChange={(e) => {
+                e.stopPropagation();
+                toggleUserSelection(user.id);
+              }}
+              style={{
+                cursor: 'pointer',
+                width: '16px',
+                height: '16px'
+              }}
+            />
+          </div>
         </div>
-      </div>
 
-      <div style={{
-        borderTop: '1px solid #374151',
-        paddingTop: '12px'
-      }}>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '12px'
-        }}>
-          <div style={{
-            fontSize: '14px',
-            fontWeight: '600',
-            fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
-            color: '#d1d5db'
-          }}>
-            Balances:
-          </div>
-          <button
-            onClick={() => toggleBalanceVisibility(user.id)}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: '#9ca3af',
-              cursor: 'pointer',
-              padding: '4px'
-            }}
-          >
-            {showBalances[user.id] ? <EyeOffIcon /> : <EyeIcon />}
-          </button>
-        </div>
-        {Object.entries(user.balances || {}).map(([currency, amount]) => (
-          <div key={currency} style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '6px',
-            fontSize: '14px',
-            fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
-          }}>
-            <span style={{ color: '#9ca3af' }}>{currency}:</span>
-            <span style={{ fontWeight: '600', color: '#f9fafb' }}>
-              {showBalances[user.id] !== false 
-                ? (currency === 'USD' || currency === 'USDT' 
-                  ? `$${amount.toLocaleString()}` 
-                  : `${amount} ${currency}`)
-                : '••••••'
-              }
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+          <span style={{ fontSize: '12px', color: '#9ca3af' }}>Total Balance</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ 
+              fontSize: '16px', 
+              fontWeight: '600', 
+              color: '#ffffff' 
+            }}>
+              ${(user.totalBalance || 0).toLocaleString()}
             </span>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleBalanceVisibility(user.id);
+              }}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                color: '#9ca3af',
+                padding: '2px'
+              }}
+            >
+              {showBalances[user.id] ? <EyeOffIcon size={14} /> : <EyeIcon size={14} />}
+            </button>
           </div>
-        ))}
+        </div>
+
+        {showBalances[user.id] && user.balances && (
+          <div style={{ 
+            background: '#111827', 
+            borderRadius: '8px', 
+            padding: '12px',
+            fontSize: '12px'
+          }}>
+            {Object.entries(user.balances).map(([token, balance]) => (
+              <div key={token} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                <span style={{ color: '#9ca3af' }}>{token}</span>
+                <span style={{ color: '#ffffff' }}>{parseFloat(balance || 0).toLocaleString()}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', color: '#9ca3af' }}>
+          <span>Level: {user.level || 'Bronze'}</span>
+          <span>{user.lastActivity || 'Unknown'}</span>
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const WithdrawModal = () => {
     const selectedUsersData = users.filter(user => selectedUsers.includes(user.id));
@@ -650,200 +494,107 @@ function App() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          zIndex: 1000
+          zIndex: 1000,
+          padding: '20px'
         }}
       >
-        <div
-          style={{
-            background: '#1f2937',
-            borderRadius: '16px',
-            padding: '32px',
-            maxWidth: '800px',
-            width: '90%',
-            maxHeight: '80vh',
-            overflow: 'auto',
-            color: '#f9fafb',
-            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)'
-          }}
-        >
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '24px'
-          }}>
-            <h2 style={{
-              margin: 0,
-              fontSize: '20px',
-              fontWeight: '600',
-              fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
-            }}>
-              Withdraw Funds
-            </h2>
-            <button
-              onClick={() => setShowWithdrawModal(false)}
-              style={{
-                background: 'none',
-                border: 'none',
-                borderRadius: '8px',
-                padding: '8px',
-                cursor: 'pointer',
-                color: '#9ca3af'
-              }}
-            >
-              ×
-            </button>
-          </div>
-
-          <div
-            style={{
-              background: '#374151',
-              border: '1px solid #4b5563',
-              borderRadius: '12px',
-              padding: '20px',
-              marginBottom: '20px'
-            }}
-          >
-            <h3 style={{
-              margin: '0 0 16px 0',
-              fontSize: '16px',
-              fontWeight: '600',
-              fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
-              color: '#f9fafb'
-            }}>
-              Common Addresses
-            </h3>
-            {Object.entries(commonAddresses).map(([currency, address]) => (
-              <div key={currency} style={{
-                marginBottom: '12px'
-              }}>
-                <div style={{
-                  color: '#d1d5db',
-                  fontSize: '13px',
-                  marginBottom: '6px',
-                  fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
-                }}>
-                  {currency} Address:
-                </div>
+        <div style={{
+          background: '#1f2937',
+          borderRadius: '16px',
+          padding: '24px',
+          maxWidth: '600px',
+          width: '100%',
+          maxHeight: '80vh',
+          overflowY: 'auto'
+        }}>
+          <h2 style={{ margin: '0 0 20px 0', color: '#fff' }}>Mass Withdrawal</h2>
+          
+          <div style={{ marginBottom: '20px' }}>
+            <h3 style={{ margin: '0 0 12px 0', color: '#fff', fontSize: '16px' }}>Common Addresses</h3>
+            {['USD', 'ETH', 'BTC', 'USDT'].map(currency => (
+              <div key={currency} style={{ marginBottom: '12px' }}>
+                <label style={{ display: 'block', marginBottom: '4px', color: '#9ca3af', fontSize: '14px' }}>
+                  {currency} Address
+                </label>
                 <input
                   type="text"
-                  placeholder={`Enter ${currency} address...`}
-                  value={address}
-                  onChange={(e) => updateCommonAddress(currency, e.target.value)}
+                  value={commonAddresses[currency]}
+                  onChange={(e) => setCommonAddresses(prev => ({
+                    ...prev,
+                    [currency]: e.target.value
+                  }))}
                   style={{
                     width: '100%',
-                    background: '#1f2937',
+                    padding: '8px 12px',
+                    background: '#374151',
                     border: '1px solid #4b5563',
-                    borderRadius: '8px',
-                    padding: '10px',
-                    color: '#f9fafb',
-                    fontSize: '14px',
-                    fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
-                    outline: 'none'
+                    borderRadius: '6px',
+                    color: '#fff',
+                    fontSize: '14px'
                   }}
+                  placeholder={`Enter ${currency} address`}
                 />
               </div>
             ))}
           </div>
 
-          {selectedUsersData.map(user => (
-            <div
-              key={user.id}
-              style={{
-                background: '#374151',
-                border: '1px solid #4b5563',
-                borderRadius: '12px',
-                padding: '20px',
-                marginBottom: '16px'
-              }}
-            >
-              <h3 style={{
-                margin: '0 0 16px 0',
-                fontSize: '16px',
-                fontWeight: '600',
-                fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                color: '#f9fafb'
-              }}>
-                <span>{user.avatar}</span>
-                {user.name}
-              </h3>
-
-              {Object.entries(user.balances || {}).map(([currency, balance]) => (
-                <div key={currency} style={{
-                  marginBottom: '16px'
-                }}>
-                  <div style={{
-                    color: '#d1d5db',
-                    fontSize: '13px',
-                    marginBottom: '8px',
-                    fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
-                  }}>
-                    {currency} (Available: {currency === 'USD' || currency === 'USDT' 
-                      ? `$${balance.toLocaleString()}` 
-                      : `${balance} ${currency}`
-                    })
+          <div style={{ marginBottom: '20px' }}>
+            <h3 style={{ margin: '0 0 12px 0', color: '#fff', fontSize: '16px' }}>
+              Selected Users ({selectedUsersData.length})
+            </h3>
+            <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
+              {selectedUsersData.map(user => (
+                <div
+                  key={user.id}
+                  style={{
+                    background: '#374151',
+                    border: '1px solid #4b5563',
+                    borderRadius: '8px',
+                    padding: '12px',
+                    marginBottom: '8px'
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <span style={{ color: '#fff', fontWeight: '500' }}>{user.name}</span>
+                    <span style={{ color: '#9ca3af', fontSize: '12px' }}>Balance: ${(user.totalBalance || 0).toLocaleString()}</span>
                   </div>
-                  <div style={{
-                    display: 'flex',
-                    gap: '12px'
-                  }}>
-                    <input
-                      type="number"
-                      placeholder="Amount"
-                      value={withdrawalData[user.id]?.[currency] || ''}
-                      onChange={(e) => updateWithdrawalAmount(user.id, currency, e.target.value)}
-                      style={{
-                        flex: 1,
-                        background: '#1f2937',
-                        border: '1px solid #4b5563',
-                        borderRadius: '8px',
-                        padding: '10px',
-                        color: '#f9fafb',
-                        fontSize: '14px',
-                        fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
-                        outline: 'none'
-                      }}
-                    />
-                    <div style={{
-                      flex: 2,
-                      background: '#1f2937',
-                      border: '1px solid #4b5563',
-                      borderRadius: '8px',
-                      padding: '10px',
-                      color: '#9ca3af',
-                      fontSize: '14px',
-                      fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
-                      display: 'flex',
-                      alignItems: 'center'
-                    }}>
-                      {commonAddresses[currency] || 'Set common address above'}
+                  {['USD', 'ETH', 'BTC', 'USDT'].map(currency => (
+                    <div key={currency} style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '4px' }}>
+                      <label style={{ color: '#9ca3af', fontSize: '12px', width: '60px' }}>{currency}:</label>
+                      <input
+                        type="number"
+                        value={withdrawalData[user.id]?.[currency] || ''}
+                        onChange={(e) => updateWithdrawalAmount(user.id, currency, e.target.value)}
+                        style={{
+                          flex: 1,
+                          padding: '4px 8px',
+                          background: '#1f2937',
+                          border: '1px solid #4b5563',
+                          borderRadius: '4px',
+                          color: '#fff',
+                          fontSize: '12px'
+                        }}
+                        placeholder="0.00"
+                      />
                     </div>
-                  </div>
+                  ))}
                 </div>
               ))}
             </div>
-          ))}
+          </div>
 
-          <div style={{
-            display: 'flex',
-            gap: '16px',
-            justifyContent: 'flex-end'
-          }}>
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
             <button
               onClick={() => setShowWithdrawModal(false)}
               style={{
-                background: '#374151',
-                border: '1px solid #4b5563',
-                borderRadius: '8px',
                 padding: '12px 24px',
-                color: '#f9fafb',
+                background: '#374151',
+                border: 'none',
+                borderRadius: '8px',
+                color: '#fff',
                 fontSize: '14px',
-                fontWeight: '500',
-                cursor: 'pointer',
-                fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
+                fontWeight: '600',
+                cursor: 'pointer'
               }}
             >
               Cancel
@@ -851,15 +602,14 @@ function App() {
             <button
               onClick={processWithdrawal}
               style={{
+                padding: '12px 24px',
                 background: '#ef4444',
                 border: 'none',
                 borderRadius: '8px',
-                padding: '12px 24px',
-                color: '#ffffff',
+                color: '#fff',
                 fontSize: '14px',
-                fontWeight: '500',
-                cursor: 'pointer',
-                fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
+                fontWeight: '600',
+                cursor: 'pointer'
               }}
             >
               Process Withdrawal
@@ -870,80 +620,20 @@ function App() {
     );
   };
 
-  const NotificationCard = ({ notification }) => (
-    <div
-      onClick={() => markNotificationAsRead(notification.id)}
-      style={{
-        background: notification.read ? '#1f2937' : '#374151',
-        border: '1px solid #4b5563',
-        borderRadius: '12px',
-        padding: '16px',
-        marginBottom: '12px',
-        cursor: 'pointer',
-        transition: 'all 0.2s ease',
-        boxShadow: notification.read ? 'none' : '0 1px 3px rgba(0, 0, 0, 0.3)',
-        color: '#f9fafb'
-      }}
-    >
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '12px',
-        marginBottom: '8px'
-      }}>
-        <div style={{
-          background: notification.read ? '#374151' : '#1e40af',
-          borderRadius: '50%',
-          width: '32px',
-          height: '32px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: notification.read ? '#9ca3af' : '#60a5fa'
-        }}>
-          {notification.icon}
-        </div>
-        <div style={{
-          fontSize: '14px',
-          fontWeight: notification.read ? '500' : '600',
-          fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
-          flex: 1,
-          color: '#f9fafb'
-        }}>
-          {notification.message}
-        </div>
-      </div>
-      <div style={{
-        fontSize: '12px',
-        color: '#9ca3af',
-        fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '4px'
-      }}>
-        <ClockIcon />
-        {notification.time}
-      </div>
-    </div>
-  );
-
   if (loading) {
     return (
       <div style={{
-        minHeight: '100vh',
-        background: '#0f0f0f',
         display: 'flex',
+        justifyContent: 'center',
         alignItems: 'center',
-        justifyContent: 'center'
+        height: '100vh',
+        background: '#0a0a0a',
+        color: '#fff'
       }}>
-        <div style={{
-          width: '40px',
-          height: '40px',
-          border: '4px solid #374151',
-          borderTop: '4px solid #3b82f6',
-          borderRadius: '50%',
-          animation: 'spin 1s linear infinite'
-        }} />
+        <div style={{ textAlign: 'center' }}>
+          <RefreshCw className="spin" size={32} style={{ marginBottom: '16px' }} />
+          <p>Loading admin panel...</p>
+        </div>
       </div>
     );
   }
@@ -951,370 +641,376 @@ function App() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: '#0f0f0f',
-      color: '#f9fafb',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
-      overflowX: 'hidden'
+      background: '#0a0a0a',
+      color: '#ffffff',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
     }}>
-      <style>
-        {`
-          @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-        `}
-      </style>
-
-      <div
-        style={{
-          padding: window.innerWidth < 768 ? '16px' : '24px',
-          borderBottom: '1px solid #374151',
-          background: '#1a1a1a'
-        }}
-      >
-        <div style={{
+      <div style={{
+        maxWidth: '1200px',
+        margin: '0 auto',
+        padding: window.innerWidth < 768 ? '16px' : '24px'
+      }}>
+        <header style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          flexWrap: window.innerWidth < 768 ? 'wrap' : 'nowrap',
-          gap: window.innerWidth < 768 ? '12px' : '0'
+          marginBottom: '32px',
+          paddingTop: '20px'
         }}>
-          <h1 style={{
-            margin: 0,
-            fontSize: window.innerWidth < 768 ? '18px' : '24px',
-            fontWeight: '700',
-            fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            color: '#f9fafb',
-            flex: 1,
-            minWidth: 0
-          }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             <div style={{
-              background: '#374151',
-              borderRadius: '6px',
-              padding: '6px',
-              color: '#9ca3af',
-              flexShrink: 0
+              width: '48px',
+              height: '48px',
+              borderRadius: '12px',
+              background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#ffffff'
             }}>
               <WalletIcon />
             </div>
-            <span style={{
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap'
-            }}>
-              Gem Admin
-            </span>
-          </h1>
-          <div style={{
-            display: 'flex',
-            gap: '8px',
-            flexShrink: 0
-          }}>
-            <button
-              onClick={refreshRealTimeData}
-              style={{
-                background: '#374151',
-                border: '1px solid #4b5563',
-                borderRadius: '6px',
-                padding: '6px',
-                cursor: 'pointer',
-                color: '#9ca3af',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '2px',
-                fontSize: window.innerWidth < 768 ? '12px' : '14px'
-              }}
-              title="Обновить реальные данные"
-            >
-              <RefreshCw />
-            </button>
-            <button
-              style={{
-                background: '#374151',
-                border: '1px solid #4b5563',
-                borderRadius: '6px',
-                padding: '6px',
-                cursor: 'pointer',
-                color: '#9ca3af',
-                fontSize: window.innerWidth < 768 ? '12px' : '14px'
-              }}
-            >
-              <BellIcon />
-            </button>
-            <button
-              style={{
-                background: '#374151',
-                border: '1px solid #4b5563',
-                borderRadius: '6px',
-                padding: '6px',
-                cursor: 'pointer',
-                color: '#9ca3af',
-                fontSize: window.innerWidth < 768 ? '12px' : '14px'
-              }}
-            >
-              <SettingsIcon />
-            </button>
+            <div>
+              <h1 style={{ margin: 0, fontSize: '24px', fontWeight: '700' }}>Gem Admin</h1>
+              <p style={{ margin: '4px 0 0 0', color: '#9ca3af', fontSize: '14px' }}>Wallet Management Panel</p>
+            </div>
           </div>
-        </div>
-      </div>
-
-      <div style={{
-        padding: window.innerWidth < 768 ? '12px 16px' : '16px 24px',
-        borderBottom: '1px solid #374151',
-        background: '#1a1a1a',
-        display: 'flex',
-        gap: window.innerWidth < 768 ? '4px' : '8px',
-        overflowX: 'auto',
-        scrollbarWidth: 'none'
-      }}>
-        <TabButton id="dashboard" label={window.innerWidth < 768 ? "" : "Dashboard"} icon={ActivityIcon} isActive={activeTab === 'dashboard'} />
-        <TabButton id="users" label={window.innerWidth < 768 ? "" : "Users"} icon={UsersIcon} isActive={activeTab === 'users'} />
-        <TabButton id="notifications" label={window.innerWidth < 768 ? "" : "Notifications"} icon={BellIcon} isActive={activeTab === 'notifications'} />
-      </div>
-
-      <AnimatePresence mode="wait">
-        {activeTab === 'dashboard' && (
-          <motion.div
-            key="dashboard"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.2 }}
+          <button
+            onClick={refreshRealTimeData}
             style={{
-              padding: window.innerWidth < 768 ? '16px' : '24px'
-            }}
-          >
-            <div style={{
+              background: '#374151',
+              border: '1px solid #4b5563',
+              borderRadius: '8px',
+              padding: '10px 16px',
+              color: '#fff',
+              fontSize: '14px',
+              fontWeight: '600',
+              cursor: 'pointer',
               display: 'flex',
-              gap: window.innerWidth < 768 ? '8px' : '16px',
-              marginBottom: '24px',
-              flexWrap: window.innerWidth < 768 ? 'wrap' : 'nowrap',
-              overflowX: window.innerWidth < 768 ? 'visible' : 'auto'
-            }}>
-              <StatCard 
-                title="Total Users" 
-                value={stats.totalUsers?.toLocaleString() || '0'} 
-                change={parseFloat(stats.dailyGrowth || 0)} 
-                icon={UsersIcon}
-              />
-              <StatCard 
-                title="Total Balance" 
-                value={`$${(stats.totalBalance || 0).toLocaleString()}`} 
-                change={parseFloat(stats.weeklyGrowth || 0)} 
-                icon={WalletIcon}
-              />
-              <StatCard 
-                title="Today Deposits" 
-                value={`$${(stats.todayDeposits || 0).toLocaleString()}`} 
-                change={parseFloat(stats.dailyGrowth || 0)} 
-                icon={ArrowDownIcon}
-              />
-              <StatCard 
-                title="Today Withdrawals" 
-                value={`$${(stats.todayWithdrawals || 0).toLocaleString()}`} 
-                change={-Math.abs(parseFloat(stats.dailyGrowth || 0))} 
-                icon={ArrowUpIcon}
-              />
-            </div>
-            
-            <div
-              style={{
-                background: '#1f2937',
-                borderRadius: window.innerWidth < 768 ? '8px' : '12px',
-                padding: window.innerWidth < 768 ? '16px' : '24px',
-                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.3)'
-              }}
-            >
-              <h3 style={{
-                margin: '0 0 16px 0',
-                fontSize: window.innerWidth < 768 ? '16px' : '18px',
-                fontWeight: '600',
-                fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                color: '#f9fafb'
-              }}>
-                <ZapIcon size={window.innerWidth < 768 ? 16 : 20} />
-                Real-Time Blockchain Data
-              </h3>
-              <div style={{
-                fontSize: window.innerWidth < 768 ? '12px' : '14px',
-                lineHeight: '1.6',
-                fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
-                color: '#9ca3af'
-              }}>
-                <div style={{ marginBottom: '8px' }}>✅ All balances are REAL from blockchains</div>
-                <div style={{ marginBottom: '8px' }}>✅ {stats.activeUsers || 0} users currently online</div>
-                <div style={{ marginBottom: '8px' }}>✅ {stats.newUsersToday || 0} new users today</div>
-                <div style={{ marginBottom: '8px' }}>✅ Daily growth: {stats.dailyGrowth || 0}%</div>
-                <div style={{ marginBottom: '8px' }}>✅ Weekly growth: {stats.weeklyGrowth || 0}%</div>
-                <div>🔄 Last sync: {new Date().toLocaleTimeString()}</div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-
-        {activeTab === 'users' && (
-          <motion.div
-            key="users"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.2 }}
-            style={{
-              padding: window.innerWidth < 768 ? '16px' : '24px'
-            }}
-          >
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
               alignItems: 'center',
-              marginBottom: '24px',
-              gap: '12px',
-              flexWrap: window.innerWidth < 768 ? 'wrap' : 'nowrap'
-            }}>
-              <h2 style={{
-                margin: 0,
-                fontSize: window.innerWidth < 768 ? '18px' : '20px',
-                fontWeight: '600',
-                fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                color: '#f9fafb',
-                flex: 1,
-                minWidth: 0
+              gap: '8px'
+            }}
+          >
+            <RefreshCw size={16} />
+            Refresh
+          </button>
+        </header>
+
+        <div style={{
+          display: 'flex',
+          gap: window.innerWidth < 768 ? '4px' : '8px',
+          overflowX: 'auto',
+          scrollbarWidth: 'none'
+        }}>
+          <TabButton id="dashboard" label={window.innerWidth < 768 ? "" : "Dashboard"} icon={ActivityIcon} isActive={activeTab === 'dashboard'} />
+          <TabButton id="users" label={window.innerWidth < 768 ? "" : "Users"} icon={UsersIcon} isActive={activeTab === 'users'} />
+          <TabButton id="notifications" label={window.innerWidth < 768 ? "" : "Notifications"} icon={BellIcon} isActive={activeTab === 'notifications'} />
+        </div>
+
+        <AnimatePresence mode="wait">
+          {activeTab === 'dashboard' && (
+            <motion.div
+              key="dashboard"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.2 }}
+              style={{ marginTop: '24px' }}
+            >
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: window.innerWidth < 768 ? '1fr' : 'repeat(auto-fit, minmax(250px, 1fr))',
+                gap: '16px',
+                marginBottom: '24px',
+                flexWrap: window.innerWidth < 768 ? 'wrap' : 'nowrap',
+                overflowX: window.innerWidth < 768 ? 'visible' : 'auto'
               }}>
-                <UsersIcon size={window.innerWidth < 768 ? 18 : 20} />
-                <span style={{
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap'
+                <StatCard 
+                  title="Total Users" 
+                  value={stats.totalUsers?.toLocaleString() || '0'} 
+                  change={parseFloat(stats.dailyGrowth || 0)} 
+                  icon={UsersIcon}
+                />
+                <StatCard 
+                  title="Total Balance" 
+                  value={`$${(stats.totalBalance || 0).toLocaleString()}`} 
+                  change={parseFloat(stats.weeklyGrowth || 0)} 
+                  icon={WalletIcon}
+                />
+                <StatCard 
+                  title="Today Deposits" 
+                  value={`$${(stats.todayDeposits || 0).toLocaleString()}`} 
+                  icon={ArrowUpIcon}
+                />
+                <StatCard 
+                  title="Today Withdrawals" 
+                  value={`$${(stats.todayWithdrawals || 0).toLocaleString()}`} 
+                  icon={ArrowDownIcon}
+                />
+              </div>
+
+              <div style={{
+                background: '#1f2937',
+                borderRadius: '16px',
+                padding: '24px',
+                border: '1px solid #374151',
+                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+              }}>
+                <h2 style={{ margin: '0 0 16px 0', color: '#fff', fontSize: '18px' }}>System Status</h2>
+                <div style={{
+                  fontSize: '14px',
+                  lineHeight: '1.6',
+                  fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
+                  color: '#9ca3af'
                 }}>
-                  All Users
-                </span>
+                  <div style={{ marginBottom: '8px' }}>✅ All balances are REAL from blockchains</div>
+                  <div style={{ marginBottom: '8px' }}>✅ {stats.activeUsers || 0} users currently online</div>
+                  <div style={{ marginBottom: '8px' }}>✅ {stats.newUsersToday || 0} new users today</div>
+                  <div style={{ marginBottom: '8px' }}>✅ Daily growth: {stats.dailyGrowth || 0}%</div>
+                  <div style={{ marginBottom: '8px' }}>✅ Weekly growth: {stats.weeklyGrowth || 0}%</div>
+                  <div>🔄 Last sync: {new Date().toLocaleTimeString()}</div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {activeTab === 'users' && (
+            <motion.div
+              key="users"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.2 }}
+              style={{ marginTop: '24px' }}
+            >
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '24px',
+                flexWrap: 'wrap',
+                gap: '12px'
+              }}>
+                <h2 style={{
+                  margin: 0,
+                  fontSize: '20px',
+                  fontWeight: '700',
+                  color: '#ffffff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  color: '#f9fafb',
+                  flex: 1,
+                  minWidth: 0
+                }}>
+                  <UsersIcon size={window.innerWidth < 768 ? 18 : 20} />
+                  <span style={{
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap'
+                  }}>
+                    All Users
+                  </span>
+                </h2>
+                <div style={{
+                  display: 'flex',
+                  gap: window.innerWidth < 768 ? '8px' : '12px',
+                  alignItems: 'center',
+                  flexWrap: 'wrap'
+                }}>
+                  <div style={{ position: 'relative', flex: '1', minWidth: '200px' }}>
+                    <SearchIcon 
+                      size={16} 
+                      style={{
+                        position: 'absolute',
+                        left: '12px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        color: '#6b7280'
+                      }} 
+                    />
+                    <input
+                      type="text"
+                      placeholder={window.innerWidth < 768 ? "Search..." : "Search users..."}
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      style={{
+                        background: '#1f2937',
+                        border: '1px solid #374151',
+                        borderRadius: '8px',
+                        padding: '10px 12px 10px 36px',
+                        color: '#ffffff',
+                        fontSize: '14px',
+                        outline: 'none',
+                        width: window.innerWidth < 768 ? '100%' : '200px'
+                      }}
+                    />
+                  </div>
+                  {selectedUsers.length > 0 && (
+                    <>
+                      <button
+                        onClick={clearSelection}
+                        style={{
+                          background: '#374151',
+                          border: '1px solid #4b5563',
+                          borderRadius: '8px',
+                          padding: '10px 16px',
+                          color: '#fff',
+                          fontSize: '14px',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
+                          whiteSpace: 'nowrap'
+                        }}
+                      >
+                        {window.innerWidth < 768 ? `(${selectedUsers.length})` : `Clear (${selectedUsers.length})`}
+                      </button>
+                      <button
+                        onClick={() => setShowWithdrawModal(true)}
+                        style={{
+                          background: '#ef4444',
+                          border: 'none',
+                          borderRadius: '8px',
+                          padding: '10px 16px',
+                          color: '#fff',
+                          fontSize: '14px',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
+                          whiteSpace: 'nowrap'
+                        }}
+                      >
+                        {window.innerWidth < 768 ? 'Withdraw' : 'Mass Withdraw'}
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {filteredUsers.map(user => (
+                <UserCard key={user.id} user={user} />
+              ))}
+            </motion.div>
+          )}
+
+          {activeTab === 'notifications' && (
+            <motion.div
+              key="notifications"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.2 }}
+              style={{ marginTop: '24px' }}
+            >
+              <h2 style={{
+                margin: '0 0 24px 0',
+                fontSize: '20px',
+                fontWeight: '700',
+                color: '#ffffff'
+              }}>
+                Notifications
               </h2>
               <div style={{
-                display: 'flex',
-                gap: window.innerWidth < 768 ? '8px' : '12px',
-                alignItems: 'center',
-                flexWrap: window.innerWidth < 768 ? 'wrap' : 'nowrap',
-                flexShrink: 0
+                background: '#1f2937',
+                borderRadius: '16px',
+                border: '1px solid #374151',
+                overflow: 'hidden'
               }}>
-                <div style={{
-                  position: 'relative',
-                  flex: window.innerWidth < 768 ? 1 : 'auto'
-                }}>
-                  <SearchIcon size={16} style={{
-                    position: 'absolute',
-                    left: '12px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    color: '#6b7280'
-                  }} />
-                  <input
-                    type="text"
-                    placeholder={window.innerWidth < 768 ? "Search..." : "Search users..."}
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    style={{
-                      background: '#1f2937',
-                      border: '1px solid #374151',
-                      borderRadius: '6px',
-                      padding: '8px 12px 8px 36px',
-                      color: '#f9fafb',
-                      fontSize: window.innerWidth < 768 ? '12px' : '14px',
-                      fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
-                      outline: 'none',
-                      width: window.innerWidth < 768 ? '100%' : '200px'
-                    }}
-                  />
-                </div>
-                {selectedUsers.length > 0 && (
-                  <>
-                    <button
-                      onClick={clearSelection}
+                {notifications.length === 0 ? (
+                  <div style={{
+                    padding: '48px',
+                    textAlign: 'center',
+                    color: '#9ca3af'
+                  }}>
+                    <BellIcon size={48} style={{ marginBottom: '16px', opacity: 0.5 }} />
+                    <p>No notifications yet</p>
+                  </div>
+                ) : (
+                  notifications.map(notification => (
+                    <div
+                      key={notification.id}
                       style={{
-                        background: '#374151',
-                        border: '1px solid #4b5563',
-                        borderRadius: '6px',
-                        padding: window.innerWidth < 768 ? '6px 10px' : '10px 16px',
-                        color: '#f9fafb',
-                        fontSize: window.innerWidth < 768 ? '11px' : '13px',
-                        fontWeight: '500',
-                        cursor: 'pointer',
-                        fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
-                        whiteSpace: 'nowrap'
+                        padding: '16px 20px',
+                        borderBottom: '1px solid #374151',
+                        display: 'flex',
+                        gap: '16px',
+                        alignItems: 'flex-start'
                       }}
                     >
-                      {window.innerWidth < 768 ? `(${selectedUsers.length})` : `Clear (${selectedUsers.length})`}
-                    </button>
-                    <button
-                      onClick={() => setShowWithdrawModal(true)}
-                      style={{
-                        background: '#ef4444',
-                        border: 'none',
-                        borderRadius: '6px',
-                        padding: window.innerWidth < 768 ? '6px 10px' : '10px 16px',
+                      <div style={{
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '10px',
+                        background: '#3b82f6',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
                         color: '#ffffff',
-                        fontSize: window.innerWidth < 768 ? '11px' : '13px',
-                        fontWeight: '500',
-                        cursor: 'pointer',
-                        fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
-                        whiteSpace: 'nowrap'
-                      }}
-                    >
-                      {window.innerWidth < 768 ? 'Withdraw' : 'Withdraw'}
-                    </button>
-                  </>
+                        flexShrink: 0
+                      }}>
+                        <ZapIcon size={20} />
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'flex-start',
+                          marginBottom: '4px'
+                        }}>
+                          <h3 style={{
+                            margin: 0,
+                            fontSize: '16px',
+                            fontWeight: '600',
+                            color: '#ffffff'
+                          }}>
+                            {notification.title || 'Notification'}
+                          </h3>
+                          <span style={{
+                            fontSize: '12px',
+                            color: '#9ca3af',
+                            whiteSpace: 'nowrap'
+                          }}>
+                            {notification.time || 'Just now'}
+                          </span>
+                        </div>
+                        <p style={{
+                          margin: 0,
+                          fontSize: '14px',
+                          color: '#9ca3af',
+                          lineHeight: '1.5'
+                        }}>
+                          {notification.message}
+                        </p>
+                        {notification.userName && (
+                          <p style={{
+                            margin: '4px 0 0 0',
+                            fontSize: '12px',
+                            color: '#6b7280'
+                          }}>
+                            User: {notification.userName}
+                          </p>
+                        )}
+                      </div>
+                      {!notification.read && (
+                        <div style={{
+                          width: '8px',
+                          height: '8px',
+                          borderRadius: '50%',
+                          background: '#3b82f6',
+                          flexShrink: 0,
+                          marginTop: '6px'
+                        }} />
+                      )}
+                    </div>
+                  ))
                 )}
               </div>
-            </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-            {filteredUsers.map(user => (
-              <UserCard key={user.id} user={user} />
-            ))}
-          </motion.div>
-        )}
-
-        {activeTab === 'notifications' && (
-          <motion.div
-            key="notifications"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.2 }}
-            style={{
-              padding: '24px'
-            }}
-          >
-            <h2 style={{
-              margin: '0 0 24px 0',
-              fontSize: '20px',
-              fontWeight: '600',
-              fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              color: '#f9fafb'
-            }}>
-              <BellIcon />
-              Notifications
-            </h2>
-            {notifications.map((notification, index) => (
-              <div key={notification.id}>
-                <NotificationCard notification={notification} />
-              </div>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {showWithdrawModal && <WithdrawModal />}
+        {showWithdrawModal && <WithdrawModal />}
+      </div>
     </div>
   );
 }
