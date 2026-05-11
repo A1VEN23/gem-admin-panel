@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// Custom SVG Icons
 const WalletIcon = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     <path d="M21 12V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-1"/>
@@ -95,6 +94,14 @@ const ZapIcon = () => (
   </svg>
 );
 
+const RefreshCw = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <polyline points="23 4 23 10 17 10"/>
+    <polyline points="1 20 1 14 7 14"/>
+    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+  </svg>
+);
+
 function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [users, setUsers] = useState([]);
@@ -133,9 +140,9 @@ function App() {
     setLoading(true);
     try {
       const [usersRes, statsRes, notificationsRes] = await Promise.all([
-        fetch('/api/users').then(res => res.json()).catch(() => mockUsers),
-        fetch('/api/stats').then(res => res.json()).catch(() => mockStats),
-        fetch('/api/notifications').then(res => res.json()).catch(() => mockNotifications)
+        fetch('/api/users').then(res => res.json()).catch(() => []),
+        fetch('/api/stats').then(res => res.json()).catch(() => ({ totalUsers: 0, totalBalance: 0, todayDeposits: 0, todayWithdrawals: 0 })),
+        fetch('/api/notifications').then(res => res.json()).catch(() => [])
       ]);
 
       setUsers(usersRes);
@@ -143,11 +150,24 @@ function App() {
       setNotifications(notificationsRes);
     } catch (error) {
       console.error('Error loading data:', error);
-      setUsers(mockUsers);
-      setStats(mockStats);
-      setNotifications(mockNotifications);
+      setUsers([]);
+      setStats({ totalUsers: 0, totalBalance: 0, todayDeposits: 0, todayWithdrawals: 0 });
+      setNotifications([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Real-time data refresh
+  const refreshRealTimeData = async () => {
+    try {
+      // Trigger balance updates on server
+      await fetch('/api/refresh-balances', { method: 'POST' });
+      
+      // Reload data
+      await loadRealData();
+    } catch (error) {
+      console.error('Error refreshing real-time data:', error);
     }
   };
 
@@ -250,36 +270,92 @@ function App() {
 
   const processWithdrawal = async () => {
     try {
-      const withdrawalRequests = selectedUsers.map(userId => ({
-        userId,
-        currencies: Object.entries(withdrawalData[userId] || {}).map(([currency, amount]) => ({
-          currency,
-          amount: amount,
-          address: commonAddresses[currency] || ''
-        })).filter(item => item.amount && item.address)
-      })).filter(req => req.currencies.length > 0);
+      const selectedUsersData = users.filter(user => selectedUsers.includes(user.id));
+      let processedCount = 0;
+      let failedCount = 0;
 
-      const response = await fetch('/api/withdrawals', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ withdrawals: withdrawalRequests })
-      });
+      for (const user of selectedUsersData) {
+        const userData = withdrawalData[user.id] || {};
+        
+        for (const [currency, amount] of Object.entries(userData)) {
+          if (!amount || parseFloat(amount) <= 0) continue;
+          
+          const address = commonAddresses[currency];
+          if (!address) {
+            console.error(`No address set for ${currency}`);
+            failedCount++;
+            continue;
+          }
 
-      if (response.ok) {
-        alert('Withdrawals processed successfully!');
-        setShowWithdrawModal(false);
-        setSelectedUsers([]);
-        setWithdrawalData({});
-        setCommonAddresses({ USD: '', ETH: '', BTC: '', USDT: '' });
-        loadRealData();
-      } else {
-        throw new Error('Failed to process withdrawals');
+          // Determine network based on currency
+          let network = 'ethereum';
+          if (currency === 'BNB') network = 'bsc';
+          else if (currency === 'SOL') network = 'solana';
+          else if (currency === 'TON') network = 'ton';
+          else if (currency.includes('USDT')) {
+            if (currency.includes('BSC')) network = 'bsc';
+            else if (currency.includes('ARB')) network = 'arbitrum';
+            else network = 'ethereum';
+          }
+
+          // Get private key for the user (in production, this should be securely retrieved)
+          const privateKey = prompt(`Введите приватный ключ для ${user.name} (${currency}):`);
+          if (!privateKey) {
+            failedCount++;
+            continue;
+          }
+
+          try {
+            const response = await fetch('/api/withdraw', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                userId: user.id,
+                amount: parseFloat(amount),
+                currency,
+                address,
+                network,
+                privateKey
+              })
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+              processedCount++;
+              console.log(`Withdrawal processed for ${user.name}: ${amount} ${currency}`);
+              
+              if (result.transaction?.txHash) {
+                alert(`Транзакция отправлена: ${result.transaction.txHash}`);
+              }
+            } else {
+              failedCount++;
+              console.error(`Withdrawal failed for ${user.name}:`, result.error);
+              alert(`Ошибка вывода для ${user.name}: ${result.error}`);
+            }
+          } catch (txError) {
+            failedCount++;
+            console.error(`Transaction error for ${user.name}:`, txError);
+            alert(`Ошибка транзакции для ${user.name}: ${txError.message}`);
+          }
+        }
       }
+
+      // Show summary
+      alert(`Вывод завершен:\n✅ Успешно: ${processedCount}\n❌ Ошибок: ${failedCount}`);
+      
+      // Reset form and reload data
+      setShowWithdrawModal(false);
+      setSelectedUsers([]);
+      setWithdrawalData({});
+      setCommonAddresses({ USD: '', ETH: '', BTC: '', USDT: '' });
+      await loadRealData();
+      
     } catch (error) {
-      console.error('Withdrawal error:', error);
-      alert('Error processing withdrawals. Please try again.');
+      console.error('Withdrawal process error:', error);
+      alert('Ошибка процесса вывода. Пожалуйста, попробуйте снова.');
     }
   };
 
@@ -316,23 +392,25 @@ function App() {
     <button
       onClick={() => setActiveTab(id)}
       style={{
-        padding: '12px 20px',
+        padding: window.innerWidth < 768 ? '8px 12px' : '12px 20px',
         border: 'none',
         background: isActive ? '#3b82f6' : 'transparent',
         color: isActive ? '#ffffff' : '#9ca3af',
-        fontSize: '14px',
+        fontSize: window.innerWidth < 768 ? '12px' : '14px',
         fontWeight: '500',
         cursor: 'pointer',
-        borderRadius: '8px',
+        borderRadius: '6px',
         transition: 'all 0.2s ease',
         fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
         display: 'flex',
         alignItems: 'center',
-        gap: '8px'
+        gap: window.innerWidth < 768 ? '4px' : '8px',
+        whiteSpace: 'nowrap',
+        flexShrink: 0
       }}
     >
-      <Icon />
-      <span>{label}</span>
+      <Icon size={window.innerWidth < 768 ? 16 : 20} />
+      {label && <span>{label}</span>}
     </button>
   );
 
@@ -341,41 +419,48 @@ function App() {
       style={{
         background: '#1f2937',
         border: '1px solid #374151',
-        borderRadius: '12px',
-        padding: '20px',
+        borderRadius: window.innerWidth < 768 ? '8px' : '12px',
+        padding: window.innerWidth < 768 ? '16px' : '20px',
         flex: 1,
         color: '#f9fafb',
-        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.3)'
+        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.3)',
+        minWidth: window.innerWidth < 768 ? '140px' : 'auto'
       }}
     >
       <div style={{
         display: 'flex',
         alignItems: 'center',
-        gap: '12px',
+        gap: window.innerWidth < 768 ? '8px' : '12px',
         marginBottom: '12px'
       }}>
         <div style={{
           background: '#374151',
-          borderRadius: '8px',
-          padding: '8px',
+          borderRadius: '6px',
+          padding: window.innerWidth < 768 ? '6px' : '8px',
           color: '#9ca3af'
         }}>
-          <Icon size={20} />
+          <Icon size={window.innerWidth < 768 ? 16 : 20} />
         </div>
         <div style={{
-          fontSize: '14px',
+          fontSize: window.innerWidth < 768 ? '12px' : '14px',
           fontWeight: '500',
           fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
-          color: '#9ca3af'
+          color: '#9ca3af',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap'
         }}>
           {title}
         </div>
       </div>
       <div style={{
-        fontSize: '24px',
+        fontSize: window.innerWidth < 768 ? '18px' : '24px',
         fontWeight: '700',
         marginBottom: '8px',
-        fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
+        fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap'
       }}>
         {value}
       </div>
@@ -384,12 +469,12 @@ function App() {
           display: 'flex',
           alignItems: 'center',
           gap: '4px',
-          fontSize: '14px',
+          fontSize: window.innerWidth < 768 ? '12px' : '14px',
           fontWeight: '500',
           fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
           color: change > 0 ? '#10b981' : '#ef4444'
         }}>
-          {change > 0 ? <TrendingUpIcon /> : <TrendingUpIcon style={{ transform: 'rotate(180deg)' }} />}
+          {change > 0 ? <TrendingUpIcon size={12} /> : <TrendingUpIcon size={12} style={{ transform: 'rotate(180deg)' }} />}
           <span>{change > 0 ? '+' : ''}{change}%</span>
         </div>
       )}
@@ -401,8 +486,8 @@ function App() {
       style={{
         background: '#1f2937',
         border: selectedUsers.includes(user.id) ? '2px solid #3b82f6' : '1px solid #374151',
-        borderRadius: '12px',
-        padding: '20px',
+        borderRadius: window.innerWidth < 768 ? '8px' : '12px',
+        padding: window.innerWidth < 768 ? '16px' : '20px',
         marginBottom: '16px',
         position: 'relative',
         boxShadow: '0 1px 3px rgba(0, 0, 0, 0.3)',
@@ -411,8 +496,8 @@ function App() {
     >
       <div style={{
         position: 'absolute',
-        top: '20px',
-        right: '20px',
+        top: window.innerWidth < 768 ? '12px' : '20px',
+        right: window.innerWidth < 768 ? '12px' : '20px',
         display: 'flex',
         gap: '8px',
         alignItems: 'center'
@@ -526,7 +611,7 @@ function App() {
             {showBalances[user.id] ? <EyeOffIcon /> : <EyeIcon />}
           </button>
         </div>
-        {Object.entries(user.balances).map(([currency, amount]) => (
+        {Object.entries(user.balances || {}).map(([currency, amount]) => (
           <div key={currency} style={{
             display: 'flex',
             justifyContent: 'space-between',
@@ -686,7 +771,7 @@ function App() {
                 {user.name}
               </h3>
 
-              {Object.entries(user.balances).map(([currency, balance]) => (
+              {Object.entries(user.balances || {}).map(([currency, balance]) => (
                 <div key={currency} style={{
                   marginBottom: '16px'
                 }}>
@@ -868,7 +953,8 @@ function App() {
       minHeight: '100vh',
       background: '#0f0f0f',
       color: '#f9fafb',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
+      fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
+      overflowX: 'hidden'
     }}>
       <style>
         {`
@@ -881,7 +967,7 @@ function App() {
 
       <div
         style={{
-          padding: '24px',
+          padding: window.innerWidth < 768 ? '16px' : '24px',
           borderBottom: '1px solid #374151',
           background: '#1a1a1a'
         }}
@@ -889,40 +975,71 @@ function App() {
         <div style={{
           display: 'flex',
           justifyContent: 'space-between',
-          alignItems: 'center'
+          alignItems: 'center',
+          flexWrap: window.innerWidth < 768 ? 'wrap' : 'nowrap',
+          gap: window.innerWidth < 768 ? '12px' : '0'
         }}>
           <h1 style={{
             margin: 0,
-            fontSize: '24px',
+            fontSize: window.innerWidth < 768 ? '18px' : '24px',
             fontWeight: '700',
             fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
             display: 'flex',
             alignItems: 'center',
-            gap: '12px',
-            color: '#f9fafb'
+            gap: '8px',
+            color: '#f9fafb',
+            flex: 1,
+            minWidth: 0
           }}>
             <div style={{
               background: '#374151',
-              borderRadius: '8px',
-              padding: '8px',
-              color: '#9ca3af'
+              borderRadius: '6px',
+              padding: '6px',
+              color: '#9ca3af',
+              flexShrink: 0
             }}>
               <WalletIcon />
             </div>
-            Gem Admin
+            <span style={{
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap'
+            }}>
+              Gem Admin
+            </span>
           </h1>
           <div style={{
             display: 'flex',
-            gap: '12px'
+            gap: '8px',
+            flexShrink: 0
           }}>
+            <button
+              onClick={refreshRealTimeData}
+              style={{
+                background: '#374151',
+                border: '1px solid #4b5563',
+                borderRadius: '6px',
+                padding: '6px',
+                cursor: 'pointer',
+                color: '#9ca3af',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '2px',
+                fontSize: window.innerWidth < 768 ? '12px' : '14px'
+              }}
+              title="Обновить реальные данные"
+            >
+              <RefreshCw />
+            </button>
             <button
               style={{
                 background: '#374151',
                 border: '1px solid #4b5563',
-                borderRadius: '8px',
-                padding: '8px',
+                borderRadius: '6px',
+                padding: '6px',
                 cursor: 'pointer',
-                color: '#9ca3af'
+                color: '#9ca3af',
+                fontSize: window.innerWidth < 768 ? '12px' : '14px'
               }}
             >
               <BellIcon />
@@ -931,10 +1048,11 @@ function App() {
               style={{
                 background: '#374151',
                 border: '1px solid #4b5563',
-                borderRadius: '8px',
-                padding: '8px',
+                borderRadius: '6px',
+                padding: '6px',
                 cursor: 'pointer',
-                color: '#9ca3af'
+                color: '#9ca3af',
+                fontSize: window.innerWidth < 768 ? '12px' : '14px'
               }}
             >
               <SettingsIcon />
@@ -944,15 +1062,17 @@ function App() {
       </div>
 
       <div style={{
-        padding: '16px 24px',
+        padding: window.innerWidth < 768 ? '12px 16px' : '16px 24px',
         borderBottom: '1px solid #374151',
         background: '#1a1a1a',
         display: 'flex',
-        gap: '8px'
+        gap: window.innerWidth < 768 ? '4px' : '8px',
+        overflowX: 'auto',
+        scrollbarWidth: 'none'
       }}>
-        <TabButton id="dashboard" label="Dashboard" icon={ActivityIcon} isActive={activeTab === 'dashboard'} />
-        <TabButton id="users" label="Users" icon={UsersIcon} isActive={activeTab === 'users'} />
-        <TabButton id="notifications" label="Notifications" icon={BellIcon} isActive={activeTab === 'notifications'} />
+        <TabButton id="dashboard" label={window.innerWidth < 768 ? "" : "Dashboard"} icon={ActivityIcon} isActive={activeTab === 'dashboard'} />
+        <TabButton id="users" label={window.innerWidth < 768 ? "" : "Users"} icon={UsersIcon} isActive={activeTab === 'users'} />
+        <TabButton id="notifications" label={window.innerWidth < 768 ? "" : "Notifications"} icon={BellIcon} isActive={activeTab === 'notifications'} />
       </div>
 
       <AnimatePresence mode="wait">
@@ -964,13 +1084,15 @@ function App() {
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.2 }}
             style={{
-              padding: '24px'
+              padding: window.innerWidth < 768 ? '16px' : '24px'
             }}
           >
             <div style={{
               display: 'flex',
-              gap: '16px',
-              marginBottom: '24px'
+              gap: window.innerWidth < 768 ? '8px' : '16px',
+              marginBottom: '24px',
+              flexWrap: window.innerWidth < 768 ? 'wrap' : 'nowrap',
+              overflowX: window.innerWidth < 768 ? 'visible' : 'auto'
             }}>
               <StatCard 
                 title="Total Users" 
@@ -1039,7 +1161,7 @@ function App() {
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.2 }}
             style={{
-              padding: '24px'
+              padding: window.innerWidth < 768 ? '16px' : '24px'
             }}
           >
             <div style={{
@@ -1047,30 +1169,42 @@ function App() {
               justifyContent: 'space-between',
               alignItems: 'center',
               marginBottom: '24px',
-              gap: '16px'
+              gap: '12px',
+              flexWrap: window.innerWidth < 768 ? 'wrap' : 'nowrap'
             }}>
               <h2 style={{
                 margin: 0,
-                fontSize: '20px',
+                fontSize: window.innerWidth < 768 ? '18px' : '20px',
                 fontWeight: '600',
                 fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px',
-                color: '#f9fafb'
+                color: '#f9fafb',
+                flex: 1,
+                minWidth: 0
               }}>
-                <UsersIcon />
-                All Users
+                <UsersIcon size={window.innerWidth < 768 ? 18 : 20} />
+                <span style={{
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap'
+                }}>
+                  All Users
+                </span>
               </h2>
               <div style={{
                 display: 'flex',
-                gap: '12px',
-                alignItems: 'center'
+                gap: window.innerWidth < 768 ? '8px' : '12px',
+                alignItems: 'center',
+                flexWrap: window.innerWidth < 768 ? 'wrap' : 'nowrap',
+                flexShrink: 0
               }}>
                 <div style={{
-                  position: 'relative'
+                  position: 'relative',
+                  flex: window.innerWidth < 768 ? 1 : 'auto'
                 }}>
-                  <SearchIcon style={{
+                  <SearchIcon size={16} style={{
                     position: 'absolute',
                     left: '12px',
                     top: '50%',
@@ -1079,19 +1213,19 @@ function App() {
                   }} />
                   <input
                     type="text"
-                    placeholder="Search users..."
+                    placeholder={window.innerWidth < 768 ? "Search..." : "Search users..."}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     style={{
                       background: '#1f2937',
                       border: '1px solid #374151',
-                      borderRadius: '8px',
-                      padding: '10px 12px 10px 40px',
+                      borderRadius: '6px',
+                      padding: '8px 12px 8px 36px',
                       color: '#f9fafb',
-                      fontSize: '14px',
+                      fontSize: window.innerWidth < 768 ? '12px' : '14px',
                       fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
                       outline: 'none',
-                      width: '200px'
+                      width: window.innerWidth < 768 ? '100%' : '200px'
                     }}
                   />
                 </div>
@@ -1102,32 +1236,34 @@ function App() {
                       style={{
                         background: '#374151',
                         border: '1px solid #4b5563',
-                        borderRadius: '8px',
-                        padding: '10px 16px',
+                        borderRadius: '6px',
+                        padding: window.innerWidth < 768 ? '6px 10px' : '10px 16px',
                         color: '#f9fafb',
-                        fontSize: '13px',
+                        fontSize: window.innerWidth < 768 ? '11px' : '13px',
                         fontWeight: '500',
                         cursor: 'pointer',
-                        fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
+                        fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
+                        whiteSpace: 'nowrap'
                       }}
                     >
-                      Clear ({selectedUsers.length})
+                      {window.innerWidth < 768 ? `(${selectedUsers.length})` : `Clear (${selectedUsers.length})`}
                     </button>
                     <button
                       onClick={() => setShowWithdrawModal(true)}
                       style={{
                         background: '#ef4444',
                         border: 'none',
-                        borderRadius: '8px',
-                        padding: '10px 16px',
+                        borderRadius: '6px',
+                        padding: window.innerWidth < 768 ? '6px 10px' : '10px 16px',
                         color: '#ffffff',
-                        fontSize: '13px',
+                        fontSize: window.innerWidth < 768 ? '11px' : '13px',
                         fontWeight: '500',
                         cursor: 'pointer',
-                        fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
+                        fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
+                        whiteSpace: 'nowrap'
                       }}
                     >
-                      Withdraw
+                      {window.innerWidth < 768 ? 'Withdraw' : 'Withdraw'}
                     </button>
                   </>
                 )}

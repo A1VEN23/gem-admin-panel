@@ -1,0 +1,87 @@
+{
+  "users": [
+    {
+      "id": "user_001",
+      "name": "Alice Johnson",
+      "telegram": "@alice_crypto",
+      "avatar": "👩",
+      "level": "Gold",
+      "isOnline": true,
+      "lastActivity": "2 min ago",
+      "addresses": {
+        "ethereum": "0x742d35Cc6634C0532925a3b8D4E7E0E0e9e0dF0",
+        "bsc": "0x742d35Cc6634C0532925a3b8D4E7E0E0e9e0dF0",
+        "solana": "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU"
+      },
+      "balances": {
+        "ETH": 1.5,
+        "USDT_ethereum": 1000,
+        "BNB": 2.0,
+        "USDT_bsc": 500,
+        "SOL": 5.0
+      },
+      "totalBalance": 1508.5,
+      "status": "active",
+      "lastBalanceUpdate": "2026-05-11T20:30:00.000Z",
+      "createdAt": "2026-05-10T15:30:00.000Z"
+    },
+    {
+      "id": "user_002", 
+      "name": "Bob Smith",
+      "telegram": "@bob_trader",
+      "avatar": "👨",
+      "level": "Platinum",
+      "isOnline": true,
+      "lastActivity": "5 min ago",
+      "addresses": {
+        "ethereum": "0x1234567890123456789012345678901234567890",
+        "arbitrum": "0x1234567890123456789012345678901234567890"
+      },
+      "balances": {
+        "ETH": 3.2,
+        "USDT_ethereum": 2500,
+        "USDT_arbitrum": 1500
+      },
+      "totalBalance": 7002.4,
+      "status": "active", 
+      "lastBalanceUpdate": "2026-05-11T20:28:00.000Z",
+      "createdAt": "2026-05-09T10:15:00.000Z"
+    }
+  ],
+  "transactions": [
+    {
+      "id": "tx_001",
+      "type": "deposit",
+      "userId": "user_001",
+      "userName": "Alice Johnson",
+      "amount": 500,
+      "currency": "USDT",
+      "address": "0x742d35Cc6634C0532925a3b8D4E7E0E0e9e0dF0",
+      "network": "ethereum",
+      "status": "completed",
+      "timestamp": "2026-05-11T19:45:00.000Z",
+      "txHash": "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+    }
+  ],
+  "notifications": [
+    {
+      "id": "notif_001",
+      "type": "deposit",
+      "message": "Пополнение USDT: +500.000000",
+      "userId": "user_001",
+      "userName": "Alice Johnson", 
+      "amount": 500,
+      "currency": "USDT",
+      "newBalance": 1508.5,
+      "time": "2 min ago",
+      "timestamp": "2026-05-11T20:30:00.000Z",
+      "read": false
+    }
+  ],
+  "stats": {
+    "totalUsers": 2,
+    "totalBalance": 8510.9,
+    "todayDeposits": 500,
+    "todayWithdrawals": 0
+  }
+}

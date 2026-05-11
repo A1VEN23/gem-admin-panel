@@ -12,7 +12,11 @@
     "cors": "^2.8.5",
     "ws": "^8.14.2",
     "axios": "^1.6.2",
-    "dotenv": "^16.3.1"
+    "dotenv": "^16.3.1",
+    "ethers": "^6.16.0",
+    "@solana/web3.js": "^1.98.4",
+    "@ton/ton": "^16.2.4",
+    "@ton/crypto": "^3.3.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.2"
