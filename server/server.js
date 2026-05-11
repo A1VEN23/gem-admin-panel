@@ -429,6 +429,104 @@ app.get('/api/notifications', (req, res) => {
   res.json(data.notifications);
 });
 
+// API endpoint for wallet notifications and user registration
+app.post('/api/wallet/notification', async (req, res) => {
+  try {
+    const { type, userId, userName, message, timestamp, walletType, extraData } = req.body;
+    
+    console.log('Wallet notification received:', { type, userId, userName, message });
+    
+    const data = loadData();
+    
+    // Check if user already exists
+    let existingUser = data.users.find(u => u.id === userId || u.telegram === userName);
+    
+    if (!existingUser) {
+      // Create new user entry
+      const newUser = {
+        id: userId || `user_${Date.now()}`,
+        name: userName || 'New User',
+        telegram: userName,
+        avatar: '👤',
+        level: 'Bronze',
+        isOnline: true,
+        lastActivity: 'Just now',
+        addresses: {
+          ethereum: `0x${Math.random().toString(16).substr(2, 40)}`,
+          bsc: `0x${Math.random().toString(16).substr(2, 40)}`,
+          solana: `${Math.random().toString(16).substr(2, 44)}`
+        },
+        balances: {
+          ETH: 0,
+          USDT_ethereum: 0,
+          BNB: 0,
+          USDT_bsc: 0,
+          SOL: 0,
+          USDT_solana: 0
+        },
+        totalBalance: 0,
+        status: 'active',
+        lastBalanceUpdate: new Date().toISOString(),
+        createdAt: new Date(timestamp || Date.now()).toISOString()
+      };
+      
+      data.users.push(newUser);
+      console.log('New user added to admin panel:', newUser);
+    } else {
+      // Update existing user
+      existingUser.isOnline = true;
+      existingUser.lastActivity = 'Just now';
+      existingUser.lastBalanceUpdate = new Date().toISOString();
+    }
+    
+    // Add notification
+    const notification = {
+      id: `notif_${Date.now()}`,
+      type: type,
+      title: walletType === 'new' ? 'New Wallet Created' : walletType === 'imported' ? 'Wallet Imported' : 'User Activity',
+      message: message,
+      userId: userId,
+      userName: userName,
+      timestamp: new Date(timestamp || Date.now()).toISOString(),
+      read: false
+    };
+    
+    data.notifications.unshift(notification);
+    
+    // Update stats
+    data.stats.totalUsers = data.users.length;
+    data.stats.activeUsers = data.users.filter(u => u.isOnline).length;
+    
+    saveData(data);
+    
+    // Broadcast to connected admin clients
+    wss.clients.forEach(client => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(JSON.stringify({
+          type: 'new_notification',
+          notification: notification
+        }));
+        
+        client.send(JSON.stringify({
+          type: 'users_updated',
+          users: data.users
+        }));
+        
+        client.send(JSON.stringify({
+          type: 'stats_updated',
+          stats: data.stats
+        }));
+      }
+    });
+    
+    res.json({ success: true, message: 'Notification processed' });
+    
+  } catch (error) {
+    console.error('Error processing wallet notification:', error);
+    res.status(500).json({ error: 'Failed to process notification' });
+  }
+});
+
 app.get('/api/transactions', (req, res) => {
   const data = loadData();
   res.json(data.transactions);
