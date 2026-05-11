@@ -2,42 +2,47 @@
 
 Beautiful admin panel for managing Gem Wallet users and balances.
 
-## Features
+## 🚀 Quick Deploy
+
+### 1. Deploy Backend on Render
+1. Create repository: https://github.com/A1VEN23/gem-admin-server
+2. Go to [render.com](https://render.com)
+3. Create Web Service
+4. Connect repository: `gem-admin-server`
+5. Build Command: `npm install`
+6. Start Command: `node server.js`
+7. Environment Variables:
+   - `PORT`: `3002`
+   - `NODE_ENV`: `production`
+
+### 2. Deploy Frontend on Vercel
+1. Go to [vercel.com](https://vercel.com)
+2. Import repository: `gem-admin-panel`
+3. Environment Variables:
+   - `VITE_API_URL`: `https://your-backend-url.onrender.com`
+
+### 3. Setup Telegram Mini App
+1. Open @BotFather in Telegram
+2. Create bot: `/newbot`
+3. Create Mini App: `/newapp`
+4. Enter your Vercel URL
+5. Set menu button: `/setmenubutton`
+
+## 📱 Features
 
 - 🎨 Beautiful UI with smooth animations
 - 📊 Real-time dashboard with statistics
 - 👥 User management
 - 💰 Balance tracking
-- 🔔 Notifications for new users and transactions
+- 🔔 Real-time notifications
 - 💸 Withdraw and deposit functionality
 
-## Setup
+## 🔗 Links
 
-1. Install dependencies:
-```bash
-npm install
-```
+- Frontend: https://github.com/A1VEN23/gem-admin-panel
+- Backend: https://github.com/A1VEN23/gem-admin-server
+- Demo: https://gem-admin-panel.vercel.app (after deployment)
 
-2. Start development server:
-```bash
-npm run dev
-```
+## 📞 Support
 
-3. Build for production:
-```bash
-npm run build
-```
-
-## Deployment
-
-Deploy the built files to your server and configure Telegram Bot with the Mini App URL.
-
-## Backend
-
-The admin panel requires a backend server for:
-- User data management
-- Real-time balance updates
-- Transaction processing
-- Notifications
-
-See `server/` directory for backend implementation.
+Check the deployment logs if you encounter issues.
