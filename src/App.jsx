@@ -109,94 +109,16 @@ function App() {
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [withdrawalData, setWithdrawalData] = useState({});
-  const [commonAddresses, setCommonAddresses] = useState({
-    USD: '',
-    ETH: '',
-    BTC: '',
-    USDT: ''
-  });
-  const [searchTerm, setSearchTerm] = useState('');
-  const [showBalances, setShowBalances] = useState({});
-  const [stats, setStats] = useState({
-    totalUsers: 0,
-    totalBalance: 0,
-    todayDeposits: 0,
-    todayWithdrawals: 0
-  });
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const tg = window.Telegram?.WebApp;
-    if (tg) {
-      tg.ready();
-      tg.expand();
-      tg.setHeaderColor('#f8fafc');
-      tg.setBackgroundColor('#ffffff');
-    }
-    loadRealData();
-  }, []);
-
-  const loadRealData = async () => {
-    setLoading(true);
-    try {
-      // Simulate API calls to real backend
-      const [usersRes, statsRes, notificationsRes] = await Promise.all([
-        fetch('/api/users').then(res => res.json()).catch(() => mockUsers),
-        fetch('/api/stats').then(res => res.json()).catch(() => mockStats),
-        fetch('/api/notifications').then(res => res.json()).catch(() => mockNotifications)
-      ]);
-      
-      setUsers(usersRes);
-      setStats(statsRes);
-      setNotifications(notificationsRes);
-    } catch (error) {
-      console.error('Error loading data:', error);
-      // Fallback to mock data
-      setUsers(mockUsers);
-      setStats(mockStats);
-      setNotifications(mockNotifications);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Mock data for fallback
-  const mockUsers = [
-    { 
-      id: 1, 
-      name: 'Alex Chen', 
-      avatar: '👨‍💼',
-      balances: { 
-        USD: 15420, 
-        ETH: 5.2, 
-        BTC: 0.15,
-        USDT: 22000
+  const [a,: 35000
       }, 
       status: 'active', 
-      lastActivity: '2 min ago',
-      isOnline: true,
-      level: 'Gold',
-      email: 'alex@example.com',
-      telegram: '@alex_chen'
-    },
-    { 
-      id: 2, 
-      name: 'Maria Silva', 
-      avatar: '👩‍💻',
-      balances: { 
-        USD: 18200, 
-        ETH: 8.1, 
-        BTC: 0.32,
-        USDT: 35000
-      }, 
-      status: 'active', 
-      lastActivity: '5 min ago',
-      isOnline: true,
+ lastActivity: '5 min ago',
+      isOnline: tru
       level: 'Platinum',
       email: 'maria@example.com',
       telegram: '@maria_silva'
     },
-    { 
+ 
       id: 3, 
       name: 'John Wilson', 
       avatar: '👨‍🎓',
@@ -303,14 +225,14 @@ function App() {
   };
 
   const toggleBalanceVisibility = (userId) => {
-    setSuhdateCommonAddoess = (currency, address) => {
-    setCwmmonAddresses(prev => ({
+    setSupdateCommonAddress = (currency, address) => {
+    setCommonAddresses(prev => ({
       ...prev,
-      [Burrancy]: addrela
+      [currency]: address
     }));
   };
 
-  const processnces(prev => ({
+  const howBalances(prev => ({
       ...prev,
       [userId]: !prev[userId]
     }));
@@ -333,314 +255,252 @@ function App() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ withdrawals: withdrawalRequests })
-      });({});
-        setCommonAddresses
-          USD: '',
-          ETH: '',
-          BTC: '',
-          USDT: ''
-        
+      });});
+        setCommonAddresses({ USD: '', ETH: '', BTC: '', USDT: '' 
 
       if (response.ok) {
         alert('Withdrawals processed successfully!');
         setShowWithdrawModal(false);
-        setSelectedUsers([]);
-        setWithdrawalData({});
-        loadRealData(); // Reload data
-      } else {
-        throw new Error('Failed to process withdrawals');
-      }
-    } catch (error) {
-      console.error('Withdrawal error:', error);
+        nsole.error('Withdrawal error:', error);
       alert('Error processing withdrawals. Please try again.');
     }
   };
 
   const markNotificationAsRead = async (notificationId) => {
-    try {
-      await fetch(`/api/notifications/${notificationId}/read`, {
-        method: 'POST'
-      });82f6
-      setNotifications(prev => 9ca3af
-        prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
-      );
-    } catch (error) {
-      console.error('Error marking notification as read:', error);
-    }
+    try tch (error) {
+      console.error('Error markinti82f6fication as read:', error);
+    }9ca3af
   };
 
   const filteredUsers = users.filter(user => 
-    user.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const TabButton = ({ id, label, icon: Icon, isActive }) => (
-    <button
-      onClick={() => setActiveTab(id)}
-      style={{
-        padding: '12px 20px',
-        border: 'none',
+    userborder: 'none',
         background: isActive ? '#1e293b' : 'transparent',
         color: isActive ? '#ffffff' : '#64748b',
-        fontSize: '14p1x2937
-        fontWeight: '500',374151
+        fontSize: '14px',
+    fontWeight: '500',
         cursor: 'pointer',
-        borderRadius: '8px',
-        transition: 'all 0.2s ease',
-        fontFamilf'fafapple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
-        display: 'flex',3
-        alignItems: 'center',
-        gap: '8px'
-      }}
-    >
-      <Icon />
+        con />3
       <span>{label}</span>
     </button>
   );
 
-  const StatCard = ({ ti374l,1alue, change, icon: Icon }) => (
-    <div
-      style={{
-        background:fca3affff',
-        border: '1px solid #e2e8f0',
-        borderRadius: '12px',
-        padding: '20px',
-        flex: 1,
-        color: '#1e293b',
-        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
-      }}
-    >9ca3af
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '12px',
-        marginBottom: '12px'
-      }}>
-        <div style={{
-          background: '#f1f5f9',
-          borderRadius: '8px',
-          padding: '8px',
-          color: '#475569'
-        }}>
-          <Icon size={20} />
-        </div>
-        <div style={{
-          fontSize: '14px',
-          fontWeight: '500',
-          fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
-          color: '#64748b'
-        }}>
-          {title}
-        </div>
-      </div>
-      <div style={{
-        fontSize: '24px',
-        fontWeight: '700',
-        marginBottom: '8px',
-        fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
-      }}>
-        {value}
-      </div>
-      {change && (
-        <div style={{12937
-          display: 'flex',374151
-          alignItems: 'center',
-          gap: '4px',
-          fontSize: '14px',
-          fontWeight: '500',
-          fontFamily: '-apple-system, BlinkMac3ystemFont, "SF Pro Display", sans-serif',
-          color: fnfafe > 0 ? '#10b981' : '#ef4444'
-        }}>
-          {change > 0 ? <TrendingUpIcon /> : <TrendingUpIcon style={{ transform: 'rotate(180deg)' }} />}
-          <span>{change > 0 ? '+' : ''}{change}%</span>
-        </div>
-      )}
-    </div>
-  );
-
-  const UserCard = ({ user }) => (
-    <div
-      style={{
-        background: '#ffffff',
-        border: selectedUsers.includes(user.id) ? '2px solid #3b82f6' : '1px solid #e2e8f0',
-        borderRadius: '12px',
-        padding: '20px',
-        marginBottom: '16px',
-        position: 'relative',
-        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-        color: '#1e293b'
+  const StatCard = ({ title, value, change, icon: Icon }) => (
+    <divboxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
       }}
     >
       <div style={{
-        position: 'absolute',
-        top: '20px',
+    display: 'flex',
+        alignItems: 'center',
+        }}>
+          <Icon size={20} />
+        </div>pple-
+        <div style={{
+      fontSize: '14px',
+          fontWeight: '500',
+        fontWeight: '700',
+        marginBottom: '8px',
+        fontFamily: '-ppple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
+      }}>
+    {value}2x,
+      </div>
+      {change && (ha
+     div 
+          dispay: 'flex',
+          alignItems: 'center',ng o
+     a'4p
+          fontWeight: 1'2937
+          fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-ser374151
+          color: change > 0 ? '#10b981' : '#ef4444'
+        }}>m: '12
+          {change > 0  pple-ndingUpIcon /> : <TrendingUpIcon style={{ transform: 'rotate(180deg)' }} />}
+          <span>{change '+' : ''}{change}%</span>
+        </div>32x,
+      )}ffaf
+    </div>
+  );2
+
+  const UserCard = ({ user }) => g no(
+    <
+        background: '#ffffff',
+        border: selectedUsers.includes(user.id) ? '2px solid #3b82f6' : '1px solid #e2e8f0',
+        borderRadius: '12px',
+        padding: '2m: '12
+        marginBottom: 1pple-,
+        position: 'relat
+        boxShadow: '0 1p2pxx,rgba(0, 0, 0, 0.1)',
+        color: '#1e293b'
+      }}
+    >,
+      <div stye={{
+        position: 'absolute',ng o
+     : '20px',
         right: '20px',
         display: 'flex',
         gap: '8px',
         alignItems: 'center'
-      }}>
-        <div style={{
+      }}>m: '12
+        <div style={{pple-
           width: '8px',
-          height: '8px',
+          height: '8px',2x,
           borderRadius: '50%',
-          background: user.isOnline ? '#10b981' : '#6b7280'
-        }} />
+          background: s500',sOnline ? '#10b981' : '#6b7280'
+     } />if',293b'
         <input
-          type="checkbox"
-          checked={selectedUsers.includes(user.id)}
+          type="checkbox"g no
+     hecked={selectedUsers.includes(user.id)}
           onChange={() => toggleUserSelection(user.id)}
-          style={{
-            width: '18px',
+          styl={{
+        width: '18px',
             height: '18px',
-            cursor: 'pointer',
-            accentColor: '#3b82f6'
+            cursor:m: '12ter',
+            accentColo:pple-b82f6'
           }}
-        />
+        />2x,
       </div>
-      
-      <div style={{
-        display: 'flex',
+      500',
+     v style={{29,b',
+        displa: 'flex',
         alignItems: 'center',
         marginBottom: '16px'
       }}>
-        <div style={{
-          fontSize: '32px',
-          marginRight9ca3afx'
-        }}>
-          {user.avatar}
+        <div syle={{
+        ntSize: '32px',
+          marginRight: '12px'
+        }}>m: '12
+          {user.avatarpple-
         </div>
-        <div style={{ flex: 1 }}>
-          <div style={{3741
-            fontSize: '16px',
-            fontWeight: '600',
-            marginBottom: '4px',
+        <div style={{ fl2 x1,}}>
+          <div style=9ca3af
+            fontSize: 1500',,
+        fontWei293b'g600',if',
+            maginBottom: '4px',
             fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
-          }}>d1ddb
+          }}>3741
             {user.name}
-          </div>
-          <div style={{
+          </di>
+        iv style={{
             display: 'flex',
-            alignItems: 'center',
+            alignItm: '12dedber',
             gap: '8px',
             fontSize: '12px',
-            fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
+            fontFamily: 2pxp,e-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
             color: '#64748b'
-          }}>
-            <ClockIcon />
+          }}>'500,
+            <ClockI29 b',if',
             <span>{user.lastActivity}</span>
-            <span style={{
+            <span style60a5a
               background: '#f1f5f9',
               padding: '2px 8px',
-              borderRadius: '12px',
-              fontSize: '10px',
+              orderRadius: '12px',
+          fontSize: '10px',
               fontWeight: '600',
-              color: '#475569'
+              colorm: '125569'
             }}>
               {user.level}
             </span>
           </div>
-          {user.telegram && (
-            <div style={{
+          {user.telegrm500',(
+            <div style={{if',
               fontSize: '12px',
               color: '#3b82f6',
               marginTop: '4px',
               fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
-            }}>
-              {user.tdgdrdbm}
+            }}
+          {user.t{{m}
             </div>
           )}
         </div>
       </div>
 
       <div style={{
-        marginBottom: '16px'
-      }}>
-        <div style={{9ca3af
-          display: 'flex',
-          justifyContent: 'space-between',
+        marginBottom: '5001,
+      }}>if',
+        <div style={{
+          display: 'fle 'cnt
+          justifyContd:d dbspace-between',
           alignItems: 'center',
-          marginBottom: '12px'
-        }}>
+          margnBottom: '12px'
+        {
           <div style={{
             fontSize: '14px',
             fontWeight: '600',
-            fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
-            color: '#374151'
-          }}>
-            Balances:
-          </div>
+            fontFamily:={{ple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
+            c: '#374151'
+          }}>9ca3af
+            Balances:500',
+          </div>if',
           <button
-            onClick={() => toggleBalanceVisibility(user.id)}
+            onClick={() 'c ntggleBalanceVisibility(user.id)}
             style={{
-              background: 'none',9ca3af
-              border: 'none',ffaf
-              color: '#64748b',
+              background: 'none',
+              order: 'none',
+          color: {{8b',
               cursor: 'pointer',
               padding: '4px'
             }}
-          >
-            {showBalances[user.id] ? <EyeOffIcon /> : <EyeIcon />}
+          >={{
+            {Balances[user.id] ? <EyeOffIcon /> : <EyeIcon />}
           </button>
         </div>
         {Object.entries(user.balances).map(([currency, amount]) => (
           <div key={currency} style={{
-            display: 'flex',
+            display: 'f 'c'nt
             justifyContent: 'space-between',
             alignItems: 'center',
             marginBottom: '6px',
-            fontSize: '14px',
-            fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
-          }}>
+            fontSize:{{',
+            fontFamily: '-apple-syst9ca3afinkMacSystemFont, "SF Pro Display", sans-serif'
+          }}>ffaf
             <span style={{ color: '#64748b' }}>{currency}:</span>
-            <span style={{ fontWeight: '600', color: '#1e293b' }}>
-              {showBalances[user.id] !== false 
+            <span style={{ontWeight: '600', color: '#1e293b' }}>
+             owBalances[user.id] !== false 
                 ? (currency === 'USD' || currency === 'USDT' 
                   ? `$${amount.toLocaleString()}` 
                   : `${amount} ${currency}`)
                 : '••••••'
-              }
+              } 'cnt
             </span>
           </div>
         ))}
-      </div>
+      </div>{{
 
       <div style={{
         display: 'flex',
-        gap: '12px'
+        gap: '12px'={{
       }}>
         <button 
           onClick={() => {
             setSelectedUsers([user.id]);
             setShowWithdrawModal(true);
-          }}
+          }} 'cnt
           style={{
             background: '#ef4444',
             border: 'none',
-            borderRadius: '8px',
+            borderRad{{8px',
             padding: '8px 16px',
             color: '#ffffff',
             fontSize: '13px',
-            fontWeight: '500',
-            cursor: 'pointer',
+            fontWeight:={{',
+            cr: 'pointer',
             fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
             display: 'flex',
             alignItems: 'center',
             gap: '6px'
-          }}
+          }} 'cnt
         >
           <ArrowUpIcon />
           Withdraw
-        </button>
+        </button>{{
         <button
           style={{
             background: '#10b981',
-            border: 'none',
-            borderRadius: '8px',
+            border: 'no={{
+            brRadius: '8px',
             padding: '8px 16px',
             color: '#ffffff',
             fontSize: '13px',
-    const allCurrencies = ['USD', 'ETH', 'BTC', 'USDT'];            fontWeight: '500',
-
-            cursor: 'pointer',
+            fontWeight: '500',
+            cursor: 'po 'cent,
             fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
             display: 'flex',
             alignItems: 'center',
@@ -648,7 +508,7 @@ function App() {
           }}
         >
           <ArrowDownIcon />
-          Deposit8
+          Deposit={{
         </button>
       </div>
     </div>
@@ -657,15 +517,15 @@ function App() {
   const WithdrawModal = () => {
     if (!showWithdrawModal) return null;
 
-    const selectedUsersDat1a2937ers.filter(user => selectedUsers.includes(user.id));
+    const selectedUsersData = users.filter(user => selectedUsers.includes(user.id));
 
     return (
-      <div8
+      <div
         style={{
           position: 'fixed',
           top: 0,
-          left: 0,ffaf
-          right: 0,5
+          left: 0,
+          right: 0,
           bottom: 0,
           background: 'rgba(0, 0, 0, 0.5)',
           display: 'flex',
@@ -690,167 +550,169 @@ function App() {
           <div style={{
             display: 'flex',
             justifyContent: 'space-between',
-            alignItems: '9ca3af',
+            alignItems: 'center',
             marginBottom: '24px'
           }}>
             <h2 style={{
               margin: 0,
               fontSize: '20px',
               fontWeight: '600',
-           /* Common AFdleysystSection,*/}BlinkMacSystemFont, "SF Pro Display", sans-serif'
-          }}> a2>
-            ton374151
-            Click={() => setShow4b5563awModal(false)}
-            yle={{
-            background: 'none',
-            border: 'none',24
-                padding: '8px',
-              cursor: 'pointer',
-              color: '#64748b'
-              
-            >
-              
-            </co>or#9ffb
-ectedUsersData.map(user => (
-            <dCommoniAddre (pplies to all ={uss)
-            style={{
-             e2lCurre8fi0'
-              borderRadius: '12px',
-                dding: '20px',
-              marginBottom: '16px'
-              }}
-            >9ca3af
-              <h3 yle={{
-                main: '0 0 16px 0',
-                foSize: '16px',
-                ntWeight: '600',
-                foFamily: '-apddress:
-                </dil>
-                <-nput
-                  type="text"
-                  psycehotder={`Enter,$ BlinkMac}Saddressefor,allSwithdrawals`}
-                  value={FommonAddresses[c Pro Di]s||y"n}-serif',
-                dionChange={(e)s=>pupdxteCommoAddress(urrncy, erg.value
-                 style={{
-                    width: '100%',
-             alignIe ekgrod: '#1f2937',
-                   gborder:a'1pxpsolid:#4b5563',8px'
-                }}>borderRaus: '8px',
-                  <spadanng: '10px',
-                    color: '#f9fafb',
-                   {fonsSiz.: '14px',tar}</span>
-                    fontFamily: '-apple-system,{BlinkMacSystemFont,u"SFsProeD.name}",sans-seri
-              </h3>outlinenone
-
-                />
-              </div
-            ))}
-    {Object/d.v>
-ies(user.balances).map(([currency, balance]) => (
-          {/* Users Amounts Section */}
-     <div <divkseyl{c{{
-            margirBottoe: '24px' style={{
-          }}>
-        marg<t3 stym 1{{
-              xargin: '0 0 16px 0',
-              f'Size: '16px',
-              fontWeight: '600',
-         }}>fontFamily:'-ppe-systm, BlnkMacSystemFon, "SF Po Dispy", sns-f',
-              olo:#f9fafb
+              fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
             }}>
-        <div ts per User
-            </h3>
-            {selecedUsersData.map => (
-              <div
-                key={user}
-               style={{
-                  bakgrond: '#374151',
-                  bode: '1px solid #4b5563',
-                  bordrRadius: '12px',
-                  paddig: '20px'
-                 minBotom: '16px'
-                }
-              >
-      co        <h4 lor: '#64748b',
-                  margin: '0 0f16pxo0',
-nt                SontSizz: ''4px'13px',
-                  fontWeight: '600',
- marg             fontFnmily: '-apple-system, BlinoMacSystemFont, "SF Pto Display", sa:s-serif',
-                   isplay'8p'lex
-                  alignItems: 'center',
- font             gap: '8ap',
-p                 ce-or:s'tf9faflikMacSystemFont, "SF Pro Display", sans-serif'
-                }}>
-  }}>          <span>{use.avatar}</span>
-                  {us.nme}
-                </h4>
+              Withdraw Funds
+            </h2>
+            <button
+              onClick={() => setShowWithdrawModal(false)}
+              style={{
+                background: 'none',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '8px',
+                cursor: 'pointer',
+                color: '#64748b'
+              }}
+            >
+              ×
+            </button>
+          </div>
 
-                {Object.entres(er.balances).ma(([currency balance]) => (
-                  <div key={currency} style={{
-                {curmergy}Bottom(Ava2lab
-                  }}>e: {currency === 'USD' || currency === 'USDT' 
-                    <div style={{
-                    ? `$${balantcaoafocaleString()}` 
-                    : `${balance} 3{currency}`
-                      marginBottom: '8px',
-                  })
-                    }}>
-                      {currency}<(Available:/{currencyd===i'USD'v||>crrency === 'USDT' 
-                        ? `$${balance.oLocaeStrng()}` 
-                        : `${balance} ${currency}`
-                      })
-                      {commonAddresses[currency] && (
-                        <spa styl={{ color'#10b981, margiLft: '8px }}>
-                          ✓ Address set
-                        </span>
-                  <div)style={{
-                    <ddivisplay: 'flex',
-                    gap: '12px'
-                  }}>numbr
-                    <input"Amot towithaw"
-                      type="number"
-                      placeholder="Amount"mount
-                      value={withdrawalData[user.id]?.[currency] || ''}
-                      onwidthge'100%'{(e) => updateWithdrawalAmount(user.id, currency, e.target.value)}
-                      style={{12937
-                        flex: 1,4b563
-                        background: '#ffffff',
-                        border: '1px solid #d1d5db',
-                        borderRadf:faf'8px',
-                        padding: '10px',
-                        color: '#1e293b',
-                        fontSize: '14px',
-                        fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
-                        outline: 'none'
-                      }}
-                ))}
-                  />
-                  <input
-                         placeholder={`${c1u2937y} Add374151
-                      value=4b5563rawalData[user.id]?.[`${currency}_address`] || ''}
-                      onChange={(e) => updateWithdrawalAddress(user.id, currency, e.target.value)}
-                      style={{
-                        flex: 2,
-                        background: '#ffffff',
-                        border: '1px solid #d1d5db',
-                        borderRadius: '8px',3
-                        padding: '10px',
-                        color: '#1e293b',
-                        fontSi3741514px',
-                        fontFamily: 4b5p63e-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
-                        outline: 'none'
-                      }}
-                    />f9faf
+          {selectedUsersData.map(user => (
+            <div
+              key={user.id}
+              style={{
+                background: '#f8fafc',
+                border: '1px solid #e2e8f0',
+                borderRadius: '12px',
+                padding: '20px',
+                marginBottom: 374151
+              }}4b5563
+            >
+              <h3 style={{
+                margin: '0 0 16px 0',
+                fontSize: '16px',
+                fontWeight: '600',
+                fontFamily: '-apple-sys8em, BlinkMacSystemFont, "SF Pro Display", sans-serif',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <span>{user.avatar}</span>
+                {user.name}
+              </h3>,
+  color: '#f9fafb'
+              12937
+              {Object.entries(user.balances).map(([currency, balance]) => (
+                <div key={currency} style={{
+                  margi8Bottom: '16px'
+                }}>
+                  <div style={{
+                    color: '#64748b',
+                    ffSfafze: '13px',
+                    marginBottom: '8px',5
+                    fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
+                  }}>d1d5d
+                    {currency} (Available: {currency === 'USD' || currency === 'USDT' 
+                      ? `$${balance.toLocaleString()}` 
+                      : `${balance} ${currency}`
+                    })
                   </div>
+                  <div style={{
+                    display: 'flex',
+                    gap: '12px'
+                  }}>
+                    <input
+                      type="number"
+                      placeholder="Amount"
+                      value={withdrawalData[user.id]?.[currency] || ''}
+                      onChange={(e) => updateWithdrawalAmount(user.id, currency, e.target.value)}
+                      style={{
+                        flex: 1,
+                        background: '#ffffff',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '8px',
+                        padding: '10px',
+                        color: '#1e2931b2937
+                        fontSize: '14px',4b563
+                   or: '#9ca3af'
+              }}
+            >
+              ×
+            </button>
+          </div>
+
+          {/* C mmon Add esses Section */}
+          <div
+            style={{
+              background   f3tF151',
+              border: '1px solid #4b5563',
+              morderRadius: '12px',
+              padding: '20px',
+              marginBottom: '20px'
+            }}
+          >
+            <h3 style={{
+              margin: '0 0 16px 0',
+              fontSize: '16pxi,ly: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
+              fontWeight: '600',
+              fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
+              color: '#f9fafb'
+              >
+              Common Addresses        outline: 'none'
+            </h3          }}ffaf
+            {Object.entries(commonAddresses).map(([currency, address]) => (
+              <div key={currency} style={{     />
+                marginBottom: '12px'
+              }}>
+                 div style={{
+                  color: '#d1d5db',
+                  fontSize: '13px',
+                  marginBottom: '6px',
+                  fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
+                }}>
+                  {currency} Address:
+                < div>
+                <input
+                  type="text"
+                  placeholder={`Enter ${currency} address...`}
+                  value={address}
+                  onChange={(e) => updateCommonAddress(currency, e.target.value)}
+                  style={{
+                    width: '100%',
+                    background: '#1f2937',
+                    border: '1px solid #4b5563',
+                     orderRadi s: '8px',
+                    padding: '10px',
+                    color: '#f9fafb',
+                    fontSize: '14px',
+                    fontFamily: '-apple-system, BlinkMacSystemFon , "SF Pro Display", sans-serif',
+                    ou line: 'n  e'
+                  }}
+                />
+              </div<
+            ))}input
+                      type="text"
+                      placeholder={`${currency} Address`}
+                      value={withdrawalData[user.id]?.[`${currency}_address`] || ''}
+                     d   borderRadius: '8px',
+                      padding: '10px',
+                      color: '#1e29312937
+                      fontSize: '14px',4b563
+                      fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
+                      outline: 'none'
+                    }}caaf
+                  />
                 </div>
-              ))}4b5633826
-            </div>
+                      display: 'flex',
+            </div>  agItmscetr
+                 ))}}}>
+                  {commonAddresses[currency] ||'Set common address above'
+            </div><div
           ))}
 
           <div style={{
             display: 'flex',
             gap: '16px',
-            justi'#f9nxf
+            justifyContent: 'flex-end'
           }}>
             <button
               onClick={() => setShowWithdrawModal(false)}
@@ -859,19 +721,19 @@ p                 ce-or:s'tf9faflikMacSystemFont, "SF Pro Display", sans-serif'
                 border: '1px solid #d1d5db',
                 borderRadius: '8px',
                 padding: '12px 24px',
-                colf faf#64748b',
+                color: '#64748b',
                 fontSize: '14px',
                 fontWeight: '500',
                 cursor: 'pointer',
                 fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
               }}
             >
-              Can9ca3af
-            </button>
-            <button
+              Cancel
+            </button>374151
+            <button4b563
               onClick={processWithdrawal}
               style={{
-                background: '#ef4444',
+                backgrounf9fafef4444',
                 border: 'none',
                 borderRadius: '8px',
                 padding: '12px 24px',
@@ -882,7 +744,7 @@ p                 ce-or:s'tf9faflikMacSystemFont, "SF Pro Display", sans-serif'
                 fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
               }}
             >
-              Process 111i27awal
+              Process Withdrawal
             </button>
           </div>
         </div>
@@ -890,7 +752,7 @@ p                 ce-or:s'tf9faflikMacSystemFont, "SF Pro Display", sans-serif'
     );
   };
 
-  const NotificationCard = ({ 374151cation }) => (
+  const NotificationCard = ({ notification }) => (
     <div
       onClick={() => markNotificationAsRead(notification.id)}
       style={{
@@ -902,8 +764,8 @@ p                 ce-or:s'tf9faflikMacSystemFont, "SF Pro Display", sans-serif'
         cursor: 'pointer',
         transition: 'all 0.2s ease',
         boxShadow: notification.read ? 'none' : '0 1px 3px rgba(0, 0, 0, 0.1)'
-      }}11127
-    >ffaf
+      }}
+    >
       <div style={{
         display: 'flex',
         alignItems: 'center',
@@ -912,15 +774,16 @@ p                 ce-or:s'tf9faflikMacSystemFont, "SF Pro Display", sans-serif'
       }}>
         <div style={{
           background: notification.read ? '#f1f5f9' : '#dbeafe',
-          borderRadius: '50%',
-          width: '32px',
+          borderRadius: '50%',12937374151
+          width: '32px',4b5563
           height: '32px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           color: notification.read ? '#64748b' : '#3b82f6'
-        }}>374151
-          {notification.1i2937
+        }}>3',
+        color: '#f9fafb
+          {notification.icon}
         </div>
         <div style={{
           fontSize: '14px',
@@ -929,51 +792,51 @@ p                 ce-or:s'tf9faflikMacSystemFont, "SF Pro Display", sans-serif'
           flex: 1,
           color: '#1e293b'
         }}>
-          {notification.message}
+          {notification.message}3741140
         </div>
       </div>
       <div style={{
         fontSize: '12px',
         color: '#64748b',
         fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
-        display: 'fleffaf
+        display: 'flex',9ca3af60a5a
         alignItems: 'center',
         gap: '4px'
-      }}>3741
+      }}>
         <ClockIcon />
         {notification.time}
-      </div>ca3af
+      </div>
     </div>
   );
-
+ffaf
   if (loading) {
     return (
       <div style={{
         minHeight: '100vh',
         background: '#f8fafc',
         display: 'flex',
-        alignItems: 'center',
+        alignItem9ca3afnter',
         justifyContent: 'center'
-      }}>374151
-        <div style={{4b5563
+      }}>
+        <div style={{
           width: '40px',
           height: '40px',
           border: '4px solid #e2e8f0',
-          borderTop: '4px9ca3af #3b82f6',
+          borderTop: '4px solid #3b82f6',
           borderRadius: '50%',
           animation: 'spin 1s linear infinite'
         }} />
       </div>
     );
   }
-374151
-  return (4b5563
+
+  return (
     <div style={{
       minHeight: '100vh',
       background: '#f8fafc',
-      color: '#1e293b',9ca3af
+      color: '#1e293b',
       fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
-    }}>
+    }}>000
       <style>
         {`
           @keyframes spin {
@@ -981,10 +844,10 @@ p                 ce-or:s'tf9faflikMacSystemFont, "SF Pro Display", sans-serif'
             100% { transform: rotate(360deg); }
           }
         `}
-      </style>
+      </style>374151
 
-      {/* Header */}374151
-      <div12937
+      {/* Header */}
+      <div
         style={{
           padding: '24px',
           borderBottom: '1px solid #e2e8f0',
@@ -993,8 +856,8 @@ p                 ce-or:s'tf9faflikMacSystemFont, "SF Pro Display", sans-serif'
       >
         <div style={{
           display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center'
+          justifyCon0t0n0:'space-between',
+          alignfmfaf: 'center'
         }}>
           <h1 style={{
             margin: 0,
@@ -1024,8 +887,8 @@ p                 ce-or:s'tf9faflikMacSystemFont, "SF Pro Display", sans-serif'
               style={{
                 background: '#ffffff',
                 border: '1px solid #e2e8f0',
-                borderRadius: '8px',
-                padding: '8px',
+                borderRadius: '8px',374151
+                padding:1a1a1a,
                 cursor: 'pointer',
                 color: '#64748b'
               }}
@@ -1039,44 +902,44 @@ p                 ce-or:s'tf9faflikMacSystemFont, "SF Pro Display", sans-serif'
                 borderRadius: '8px',
                 padding: '8px',
                 cursor: 'pointer',
-                color: '#64748b'12937
+                color: '#64748b'
               }}
-            >
-              <SettingsIcon />3
+            >ffaf
+              <SettingsIcon />
             </button>
-          </div>
+          </div>3741
         </div>
       </div>
-
+ca3af
       {/* Tabs */}
       <div style={{
         padding: '16px 24px',
         borderBottom: '1px solid #e2e8f0',
         background: '#ffffff',
-        display: 'flex',ffaf
+        display: 'flex',
         gap: '8px'
       }}>
         <TabButton id="dashboard" label="Dashboard" icon={ActivityIcon} isActive={activeTab === 'dashboard'} />
         <TabButton id="users" label="Users" icon={UsersIcon} isActive={activeTab === 'users'} />
         <TabButton id="notifications" label="Notifications" icon={BellIcon} isActive={activeTab === 'notifications'} />
-      </div>
-
+      </div>374151
+4b5563
       {/* Content */}
-      <AnimatePresence mode9ca3af">
+      <AnimatePresence mode="wait">
         <motion.div
-          key={activeTab}
+          key={activeTab}9ca3af
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
           transition={{ duration: 0.2 }}
           style={{ padding: '24px' }}
         >
-          {activeTab === 'dashboard' && (
-            <div>
+          {activeTab === 'dash374151 && (
+            <div>4b5563
               <div style={{
                 display: 'flex',
                 gap: '16px',
-                marginBottom: '32px',
+                marginBot9ca3af32px',
                 flexWrap: 'wrap'
               }}>
                 <StatCard 
@@ -1088,8 +951,8 @@ p                 ce-or:s'tf9faflikMacSystemFont, "SF Pro Display", sans-serif'
                 <StatCard 
                   title="Total Balance" 
                   value={`$${stats.totalBalance.toLocaleString()}`} 
-                  change={1f}faf
-                  icon={DollarIcon}
+                  change={12.5} 374151
+                  icon1a1a1aarIcon}
                 />
                 <StatCard 
                   title="Today Deposits" 
@@ -1106,7 +969,7 @@ p                 ce-or:s'tf9faflikMacSystemFont, "SF Pro Display", sans-serif'
               </div>
               
               <div
-                style={{6b7280
+                style={{
                   background: '#ffffff',
                   borderRadius: '12px',
                   padding: '24px',
@@ -1114,11 +977,11 @@ p                 ce-or:s'tf9faflikMacSystemFont, "SF Pro Display", sans-serif'
                 }}
               >
                 <h3 style={{
-                  margin: '0 0 16px 0'12937
-                  fontSize: '18px',4b563
+                  margin: '0 0 16px 0',
+                  fontSize: '18px',
                   fontWeight: '600',
                   fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
-                  display: 'flex'ffaf
+                  display: 'flex',
                   alignItems: 'center',
                   gap: '8px',
                   color: '#1e293b'
@@ -1131,11 +994,11 @@ p                 ce-or:s'tf9faflikMacSystemFont, "SF Pro Display", sans-serif'
                   lineHeight: '1.6',
                   fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
                   color: '#64748b'
-                }}>374151
-                  System is running smoothly. 4b5 63rvices operational. Last sync: {new Date().toLocaleTimeString()}
+                }}>
+                  System is running smoothly. All services operational. Last sync: {new Date().toLocaleTimeString()}
                 </div>
               </div>
-            </div>f9faf
+            </div>
           )}
 
           {activeTab === 'users' && (
@@ -1158,10 +1021,10 @@ p                 ce-or:s'tf9faflikMacSystemFont, "SF Pro Display", sans-serif'
                   gap: '8px',
                   color: '#1e293b'
                 }}>
-                  <UsersIcon />
+                  <UsersIcon />12937
                   All Users
                 </h2>
-                <div style={{
+                <div style={{3
                   display: 'flex',
                   gap: '12px',
                   alignItems: 'center'
@@ -1172,7 +1035,7 @@ p                 ce-or:s'tf9faflikMacSystemFont, "SF Pro Display", sans-serif'
                     <SearchIcon style={{
                       position: 'absolute',
                       left: '12px',
-                      top: '50%',
+                      top: f%faf,
                       transform: 'translateY(-50%)',
                       color: '#9ca3af'
                     }} />
@@ -1181,9 +1044,9 @@ p                 ce-or:s'tf9faflikMacSystemFont, "SF Pro Display", sans-serif'
                       placeholder="Search users..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      style={{
+                      style9ca3af
                         background: '#ffffff',
-                        border: '1px solid #d1d5db',
+                        borf:faf'1px solid #d1d5db',
                         borderRadius: '8px',
                         padding: '10px 12px 10px 40px',
                         color: '#1e293b',
@@ -1198,7 +1061,7 @@ p                 ce-or:s'tf9faflikMacSystemFont, "SF Pro Display", sans-serif'
                     <>
                       <button
                         onClick={clearSelection}
-                        sfefaf{{
+                        style={{
                           background: '#ffffff',
                           border: '1px solid #d1d5db',
                           borderRadius: '8px',
@@ -1215,7 +1078,7 @@ p                 ce-or:s'tf9faflikMacSystemFont, "SF Pro Display", sans-serif'
                       <button
                         onClick={() => setShowWithdrawModal(true)}
                         style={{
-                          background: '#ef4444',
+                          backg6b7280 '#ef4444',
                           border: 'none',
                           borderRadius: '8px',
                           padding: '10px 16px',
@@ -1223,11 +1086,11 @@ p                 ce-or:s'tf9faflikMacSystemFont, "SF Pro Display", sans-serif'
                           fontSize: '13px',
                           fontWeight: '500',
                           cursor: 'pointer',
-                          fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
-                        }}
+                          fontFamily: 1l2937e-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
+                        }}3741
                       >
                         Withdraw Selected
-                      </button>
+                      </button>ffaf
                     </>
                   )}
                   <button
@@ -1268,21 +1131,114 @@ p                 ce-or:s'tf9faflikMacSystemFont, "SF Pro Display", sans-serif'
                 gap: '8px',
                 color: '#1e293b'
               }}>
-                <BellIcon />
-                Notifications
+                <BellIcon />374151
+                Notifications4b563
               </h2>
-              {notifications.map((notification, index) => (
-                <div key={notification.id}>
-                  <NotificationCard notification={notification} />
-                </div>
-              ))}
-            </div>
-          )}
-        </motion.div>
+              {notifica>
+f9faf
+      <WithdrawModal /t
+    </div>
+  );ions.map((notification, index) => (
+}
+>
+
+      <WithdrawModal /
+    </div>
+  );
+}
+>
+
+      <WithdrawModal />
+    </div
+  );
+}
+
+export default App;export default App;export default App;                <div key={notification.id}>
+                  <Noti>
+
+      <WithdrawModal />
+    </divficationCard notification={notification} />
+  );
+}
+>
+
+      <WithdrawModal />
+    </div
+  );
+}>
+
+      <WithdrawModal />
+    </divdiv>
       </AnimatePresence>
 
       <WithdrawModal />
+    </
+  );
+}
+
+export default App;
+  );
+}
+
+export default App;
+export default App;export default App;                </div>
+              ))}div>
+      </AnimatePresence>
+ffaf
+      <WithdrawModal />
+    </
+  );
+}
+
+export default App;
+            </div>
+          )}
+        </motion.div>
+      </AnimatePrdiv>
+      </AnimatePresence>
+div>
+      </AnimatePresence>
+
+      <WithdrawModal />
+    </
+  );
+}
+
+export default App;
+      <WithdrawModal />
+    </esen
+  );
+}
+
+export default Apdiv>
+      </AnimatePresence>
+
+      <WithdrawModal />
+    </p;ce
+  );
+}
+
+export default App;>
+
+      <WithdrawModal />
     </div>
+  );
+}
+div>
+      </AnimatePresence>
+
+      <WithdrawModal />
+    </
+  );
+}
+
+export default App;
+export default App;
+div>
+      </AnimatePresence>
+
+      <WithdrawModal />
+    </
   );
 }
 
