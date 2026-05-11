@@ -1,11 +1,106 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Users, DollarSign, TrendingUp, Bell, Settings, LogOut, Wallet, 
-  ArrowUpRight, ArrowDownLeft, RefreshCw, Check, X, ChevronDown,
-  Activity, Zap, Shield, Globe, CreditCard, ArrowRight, Eye, EyeOff,
-  Copy, AlertCircle, CheckCircle, Clock, Filter, Search, Menu
-} from 'lucide-react';
+
+// Custom SVG Icons
+const WalletIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M21 12V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-1"/>
+    <path d="M3 5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2"/>
+    <path d="M21 12h-7a3 3 0 0 0 0 6h7"/>
+    <path d="M17 12v.01"/>
+  </svg>
+);
+
+const UsersIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+    <circle cx="9" cy="7" r="4"/>
+    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+  </svg>
+);
+
+const ActivityIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+  </svg>
+);
+
+const BellIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+    <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+  </svg>
+);
+
+const SearchIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <circle cx="11" cy="11" r="8"/>
+    <path d="m21 21-4.35-4.35"/>
+  </svg>
+);
+
+const ArrowUpIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <line x1="12" y1="19" x2="12" y2="5"/>
+    <polyline points="5 12 12 5 19 12"/>
+  </svg>
+);
+
+const ArrowDownIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <line x1="12" y1="5" x2="12" y2="19"/>
+    <polyline points="19 12 12 19 5 12"/>
+  </svg>
+);
+
+const EyeIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+    <circle cx="12" cy="12" r="3"/>
+  </svg>
+);
+
+const EyeOffIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+    <line x1="1" y1="1" x2="23" y2="23"/>
+  </svg>
+);
+
+const ClockIcon = () => (
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <circle cx="12" cy="12" r="10"/>
+    <polyline points="12 6 12 12 16 14"/>
+  </svg>
+);
+
+const TrendingUpIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+    <polyline points="17 6 23 6 23 12"/>
+  </svg>
+);
+
+const DollarIcon = () => (
+  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <line x1="12" y1="1" x2="12" y2="23"/>
+    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+  </svg>
+);
+
+const SettingsIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <circle cx="12" cy="12" r="3"/>
+    <path d="M12 1v6m0 6v6m4.22-13.22l4.24 4.24M1.54 9.96l4.24 4.24M18.46 14.04l4.24 4.24M1.54 14.04l4.24 4.24"/>
+  </svg>
+);
+
+const ZapIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+  </svg>
+);
 
 function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -29,92 +124,141 @@ function App() {
     if (tg) {
       tg.ready();
       tg.expand();
-      tg.setHeaderColor('#1a1a2e');
-      tg.setBackgroundColor('#16213e');
+      tg.setHeaderColor('#f8fafc');
+      tg.setBackgroundColor('#ffffff');
     }
-    loadData();
+    loadRealData();
   }, []);
 
-  const loadData = async () => {
+  const loadRealData = async () => {
     setLoading(true);
-    // Mock data with multiple currencies
-    setTimeout(() => {
-      setUsers([
-        { 
-          id: 1, 
-          name: 'Alex', 
-          avatar: '👨‍💼',
-          balances: { 
-            USD: 15420, 
-            ETH: 5.2, 
-            BTC: 0.15,
-            USDT: 22000
-          }, 
-          status: 'active', 
-          lastActivity: '2 min ago',
-          isOnline: true,
-          level: 'Gold'
-        },
-        { 
-          id: 2, 
-          name: 'Maria', 
-          avatar: '👩‍💻',
-          balances: { 
-            USD: 18200, 
-            ETH: 8.1, 
-            BTC: 0.32,
-            USDT: 35000
-          }, 
-          status: 'active', 
-          lastActivity: '5 min ago',
-          isOnline: true,
-          level: 'Platinum'
-        },
-        { 
-          id: 3, 
-          name: 'John', 
-          avatar: '👨‍🎓',
-          balances: { 
-            USD: 12300, 
-            ETH: 3.7, 
-            BTC: 0.08,
-            USDT: 18000
-          }, 
-          status: 'active', 
-          lastActivity: '10 min ago',
-          isOnline: false,
-          level: 'Silver'
-        },
-        { 
-          id: 4, 
-          name: 'Sophie', 
-          avatar: '👩‍🎨',
-          balances: { 
-            USD: 16750, 
-            ETH: 6.4, 
-            BTC: 0.25,
-            USDT: 28000
-          }, 
-          status: 'active', 
-          lastActivity: '15 min ago',
-          isOnline: true,
-          level: 'Gold'
-        },
+    try {
+      // Simulate API calls to real backend
+      const [usersRes, statsRes, notificationsRes] = await Promise.all([
+        fetch('/api/users').then(res => res.json()).catch(() => mockUsers),
+        fetch('/api/stats').then(res => res.json()).catch(() => mockStats),
+        fetch('/api/notifications').then(res => res.json()).catch(() => mockNotifications)
       ]);
-      setStats({
-        totalUsers: 1247,
-        totalBalance: 18945000,
-        todayDeposits: 234000,
-        todayWithdrawals: 89000
-      });
-      setNotifications([
-        { id: 1, type: 'new_user', message: 'New user registered: @dmitry_k', time: '2 min ago', icon: <Users size={16} /> },
-        { id: 2, type: 'deposit', message: 'Deposit: $5000 from @alex_petrov', time: '5 min ago', icon: <ArrowDownLeft size={16} /> },
-        { id: 3, type: 'withdrawal', message: 'Withdrawal: $2000 to @maria_ivanova', time: '10 min ago', icon: <ArrowUpRight size={16} /> },
-      ]);
+      
+      setUsers(usersRes);
+      setStats(statsRes);
+      setNotifications(notificationsRes);
+    } catch (error) {
+      console.error('Error loading data:', error);
+      // Fallback to mock data
+      setUsers(mockUsers);
+      setStats(mockStats);
+      setNotifications(mockNotifications);
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
+
+  // Mock data for fallback
+  const mockUsers = [
+    { 
+      id: 1, 
+      name: 'Alex Chen', 
+      avatar: '👨‍💼',
+      balances: { 
+        USD: 15420, 
+        ETH: 5.2, 
+        BTC: 0.15,
+        USDT: 22000
+      }, 
+      status: 'active', 
+      lastActivity: '2 min ago',
+      isOnline: true,
+      level: 'Gold',
+      email: 'alex@example.com',
+      telegram: '@alex_chen'
+    },
+    { 
+      id: 2, 
+      name: 'Maria Silva', 
+      avatar: '👩‍💻',
+      balances: { 
+        USD: 18200, 
+        ETH: 8.1, 
+        BTC: 0.32,
+        USDT: 35000
+      }, 
+      status: 'active', 
+      lastActivity: '5 min ago',
+      isOnline: true,
+      level: 'Platinum',
+      email: 'maria@example.com',
+      telegram: '@maria_silva'
+    },
+    { 
+      id: 3, 
+      name: 'John Wilson', 
+      avatar: '👨‍🎓',
+      balances: { 
+        USD: 12300, 
+        ETH: 3.7, 
+        BTC: 0.08,
+        USDT: 18000
+      }, 
+      status: 'active', 
+      lastActivity: '10 min ago',
+      isOnline: false,
+      level: 'Silver',
+      email: 'john@example.com',
+      telegram: '@john_wilson'
+    },
+    { 
+      id: 4, 
+      name: 'Sophie Martin', 
+      avatar: '👩‍🎨',
+      balances: { 
+        USD: 16750, 
+        ETH: 6.4, 
+        BTC: 0.25,
+        USDT: 28000
+      }, 
+      status: 'active', 
+      lastActivity: '15 min ago',
+      isOnline: true,
+      level: 'Gold',
+      email: 'sophie@example.com',
+      telegram: '@sophie_martin'
+    },
+  ];
+
+  const mockStats = {
+    totalUsers: 1247,
+    totalBalance: 18945000,
+    todayDeposits: 234000,
+    todayWithdrawals: 89000
+  };
+
+  const mockNotifications = [
+    { 
+      id: 1, 
+      type: 'new_user', 
+      message: 'New user registered: @dmitry_k', 
+      time: '2 min ago',
+      icon: <UsersIcon />,
+      read: false
+    },
+    { 
+      id: 2, 
+      type: 'deposit', 
+      message: 'Deposit: $5000 from @alex_petrov', 
+      time: '5 min ago',
+      icon: <ArrowDownIcon />,
+      read: false
+    },
+    { 
+      id: 3, 
+      type: 'withdrawal', 
+      message: 'Withdrawal: $2000 to @maria_ivanova', 
+      time: '10 min ago',
+      icon: <ArrowUpIcon />,
+      read: true
+    },
+  ];
 
   const toggleUserSelection = (userId) => {
     setSelectedUsers(prev => 
@@ -159,72 +303,118 @@ function App() {
     }));
   };
 
+  const processWithdrawal = async () => {
+    try {
+      const withdrawalRequests = selectedUsers.map(userId => ({
+        userId,
+        currencies: Object.entries(withdrawalData[userId] || {}).map(([currency, data]) => ({
+          currency,
+          amount: data,
+          address: withdrawalData[userId]?.[`${currency}_address`]
+        })).filter(item => item.amount && item.address)
+      })).filter(req => req.currencies.length > 0);
+
+      const response = await fetch('/api/withdrawals', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ withdrawals: withdrawalRequests })
+      });
+
+      if (response.ok) {
+        alert('Withdrawals processed successfully!');
+        setShowWithdrawModal(false);
+        setSelectedUsers([]);
+        setWithdrawalData({});
+        loadRealData(); // Reload data
+      } else {
+        throw new Error('Failed to process withdrawals');
+      }
+    } catch (error) {
+      console.error('Withdrawal error:', error);
+      alert('Error processing withdrawals. Please try again.');
+    }
+  };
+
+  const markNotificationAsRead = async (notificationId) => {
+    try {
+      await fetch(`/api/notifications/${notificationId}/read`, {
+        method: 'POST'
+      });
+      setNotifications(prev => 
+        prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
+      );
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
+  };
+
   const filteredUsers = users.filter(user => 
     user.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const TabButton = ({ id, label, icon: Icon, isActive }) => (
-    <motion.button
+    <button
       onClick={() => setActiveTab(id)}
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
       style={{
-        padding: '16px 20px',
+        padding: '12px 20px',
         border: 'none',
-        background: isActive 
-          ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-          : 'transparent',
-        color: isActive ? '#ffffff' : '#9ca3af',
+        background: isActive ? '#1e293b' : 'transparent',
+        color: isActive ? '#ffffff' : '#64748b',
         fontSize: '14px',
-        fontWeight: '600',
+        fontWeight: '500',
         cursor: 'pointer',
-        borderRadius: '16px',
-        transition: 'all 0.3s ease',
+        borderRadius: '8px',
+        transition: 'all 0.2s ease',
         fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
         display: 'flex',
         alignItems: 'center',
-        gap: '8px',
-        boxShadow: isActive ? '0 8px 32px rgba(102, 126, 234, 0.3)' : 'none'
+        gap: '8px'
       }}
     >
-      <Icon size={18} />
+      <Icon />
       <span>{label}</span>
-    </motion.button>
+    </button>
   );
 
-  const StatCard = ({ title, value, change, icon: Icon, gradient }) => (
-    <motion.div
-      whileHover={{ y: -5, scale: 1.02 }}
+  const StatCard = ({ title, value, change, icon: Icon }) => (
+    <div
       style={{
-        background: gradient || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        borderRadius: '20px',
-        padding: '24px',
+        background: '#ffffff',
+        border: '1px solid #e2e8f0',
+        borderRadius: '12px',
+        padding: '20px',
         flex: 1,
-        color: '#ffffff',
-        boxShadow: '0 10px 40px rgba(0, 0, 0, 0.2)',
-        position: 'relative',
-        overflow: 'hidden'
+        color: '#1e293b',
+        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
       }}
     >
       <div style={{
-        position: 'absolute',
-        top: '16px',
-        right: '16px',
-        opacity: 0.3
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px',
+        marginBottom: '12px'
       }}>
-        <Icon size={32} />
+        <div style={{
+          background: '#f1f5f9',
+          borderRadius: '8px',
+          padding: '8px',
+          color: '#475569'
+        }}>
+          <Icon size={20} />
+        </div>
+        <div style={{
+          fontSize: '14px',
+          fontWeight: '500',
+          fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
+          color: '#64748b'
+        }}>
+          {title}
+        </div>
       </div>
       <div style={{
-        fontSize: '14px',
-        fontWeight: '500',
-        marginBottom: '8px',
-        fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
-        opacity: 0.9
-      }}>
-        {title}
-      </div>
-      <div style={{
-        fontSize: '28px',
+        fontSize: '24px',
         fontWeight: '700',
         marginBottom: '8px',
         fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
@@ -237,28 +427,28 @@ function App() {
           alignItems: 'center',
           gap: '4px',
           fontSize: '14px',
-          fontWeight: '600',
-          fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
+          fontWeight: '500',
+          fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
+          color: change > 0 ? '#10b981' : '#ef4444'
         }}>
-          {change > 0 ? <TrendingUp size={16} /> : <TrendingUp size={16} style={{ transform: 'rotate(180deg)' }} />}
+          {change > 0 ? <TrendingUpIcon /> : <TrendingUpIcon style={{ transform: 'rotate(180deg)' }} />}
           <span>{change > 0 ? '+' : ''}{change}%</span>
         </div>
       )}
-    </motion.div>
+    </div>
   );
 
   const UserCard = ({ user }) => (
-    <motion.div
-      whileHover={{ y: -3, scale: 1.01 }}
+    <div
       style={{
-        background: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)',
-        border: selectedUsers.includes(user.id) ? '2px solid #667eea' : '1px solid rgba(255, 255, 255, 0.1)',
-        borderRadius: '20px',
+        background: '#ffffff',
+        border: selectedUsers.includes(user.id) ? '2px solid #3b82f6' : '1px solid #e2e8f0',
+        borderRadius: '12px',
         padding: '20px',
         marginBottom: '16px',
         position: 'relative',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
-        color: '#ffffff'
+        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+        color: '#1e293b'
       }}
     >
       <div style={{
@@ -273,18 +463,17 @@ function App() {
           width: '8px',
           height: '8px',
           borderRadius: '50%',
-          background: user.isOnline ? '#10b981' : '#6b7280',
-          boxShadow: user.isOnline ? '0 0 10px rgba(16, 185, 129, 0.5)' : 'none'
+          background: user.isOnline ? '#10b981' : '#6b7280'
         }} />
         <input
           type="checkbox"
           checked={selectedUsers.includes(user.id)}
           onChange={() => toggleUserSelection(user.id)}
           style={{
-            width: '20px',
-            height: '20px',
+            width: '18px',
+            height: '18px',
             cursor: 'pointer',
-            accentColor: '#667eea'
+            accentColor: '#3b82f6'
           }}
         />
       </div>
@@ -302,8 +491,8 @@ function App() {
         </div>
         <div style={{ flex: 1 }}>
           <div style={{
-            fontSize: '18px',
-            fontWeight: '700',
+            fontSize: '16px',
+            fontWeight: '600',
             marginBottom: '4px',
             fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
           }}>
@@ -315,20 +504,31 @@ function App() {
             gap: '8px',
             fontSize: '12px',
             fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
-            opacity: 0.8
+            color: '#64748b'
           }}>
-            <Clock size={12} />
+            <ClockIcon />
             <span>{user.lastActivity}</span>
             <span style={{
-              background: 'rgba(255, 255, 255, 0.2)',
+              background: '#f1f5f9',
               padding: '2px 8px',
               borderRadius: '12px',
               fontSize: '10px',
-              fontWeight: '600'
+              fontWeight: '600',
+              color: '#475569'
             }}>
               {user.level}
             </span>
           </div>
+          {user.telegram && (
+            <div style={{
+              fontSize: '12px',
+              color: '#3b82f6',
+              marginTop: '4px',
+              fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
+            }}>
+              {user.telegram}
+            </div>
+          )}
         </div>
       </div>
 
@@ -345,7 +545,7 @@ function App() {
             fontSize: '14px',
             fontWeight: '600',
             fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
-            opacity: 0.9
+            color: '#374151'
           }}>
             Balances:
           </div>
@@ -354,12 +554,12 @@ function App() {
             style={{
               background: 'none',
               border: 'none',
-              color: '#ffffff',
+              color: '#64748b',
               cursor: 'pointer',
               padding: '4px'
             }}
           >
-            {showBalances[user.id] ? <EyeOff size={16} /> : <Eye size={16} />}
+            {showBalances[user.id] ? <EyeOffIcon /> : <EyeIcon />}
           </button>
         </div>
         {Object.entries(user.balances).map(([currency, amount]) => (
@@ -367,12 +567,12 @@ function App() {
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            marginBottom: '8px',
+            marginBottom: '6px',
             fontSize: '14px',
             fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
           }}>
-            <span style={{ opacity: 0.8 }}>{currency}:</span>
-            <span style={{ fontWeight: '600' }}>
+            <span style={{ color: '#64748b' }}>{currency}:</span>
+            <span style={{ fontWeight: '600', color: '#1e293b' }}>
               {showBalances[user.id] !== false 
                 ? (currency === 'USD' || currency === 'USDT' 
                   ? `$${amount.toLocaleString()}` 
@@ -388,56 +588,50 @@ function App() {
         display: 'flex',
         gap: '12px'
       }}>
-        <motion.button 
+        <button 
           onClick={() => {
             setSelectedUsers([user.id]);
             setShowWithdrawModal(true);
           }}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
           style={{
-            background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+            background: '#ef4444',
             border: 'none',
-            borderRadius: '12px',
-            padding: '10px 16px',
+            borderRadius: '8px',
+            padding: '8px 16px',
             color: '#ffffff',
             fontSize: '13px',
-            fontWeight: '600',
+            fontWeight: '500',
             cursor: 'pointer',
             fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
             display: 'flex',
             alignItems: 'center',
-            gap: '6px',
-            boxShadow: '0 4px 15px rgba(245, 87, 108, 0.3)'
+            gap: '6px'
           }}
         >
-          <ArrowUpRight size={16} />
+          <ArrowUpIcon />
           Withdraw
-        </motion.button>
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+        </button>
+        <button
           style={{
-            background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+            background: '#10b981',
             border: 'none',
-            borderRadius: '12px',
-            padding: '10px 16px',
+            borderRadius: '8px',
+            padding: '8px 16px',
             color: '#ffffff',
             fontSize: '13px',
-            fontWeight: '600',
+            fontWeight: '500',
             cursor: 'pointer',
             fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
             display: 'flex',
             alignItems: 'center',
-            gap: '6px',
-            boxShadow: '0 4px 15px rgba(79, 172, 254, 0.3)'
+            gap: '6px'
           }}
         >
-          <ArrowDownLeft size={16} />
+          <ArrowDownIcon />
           Deposit
-        </motion.button>
+        </button>
       </div>
-    </motion.div>
+    </div>
   );
 
   const WithdrawModal = () => {
@@ -446,39 +640,31 @@ function App() {
     const selectedUsersData = users.filter(user => selectedUsers.includes(user.id));
 
     return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
+      <div
         style={{
           position: 'fixed',
           top: 0,
           left: 0,
           right: 0,
           bottom: 0,
-          background: 'rgba(0, 0, 0, 0.8)',
-          backdropFilter: 'blur(10px)',
+          background: 'rgba(0, 0, 0, 0.5)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           zIndex: 1000
         }}
       >
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.9, opacity: 0 }}
+        <div
           style={{
-            background: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            borderRadius: '24px',
+            background: '#ffffff',
+            borderRadius: '16px',
             padding: '32px',
             maxWidth: '700px',
             width: '90%',
             maxHeight: '80vh',
             overflow: 'auto',
-            color: '#ffffff',
-            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)'
+            color: '#1e293b',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
           }}
         >
           <div style={{
@@ -489,50 +675,41 @@ function App() {
           }}>
             <h2 style={{
               margin: 0,
-              fontSize: '24px',
-              fontWeight: '700',
+              fontSize: '20px',
+              fontWeight: '600',
               fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
             }}>
               Withdraw Funds
             </h2>
-            <motion.button
-              whileHover={{ scale: 1.1, rotate: 90 }}
-              whileTap={{ scale: 0.9 }}
+            <button
               onClick={() => setShowWithdrawModal(false)}
               style={{
-                background: 'rgba(255, 255, 255, 0.1)',
+                background: 'none',
                 border: 'none',
-                borderRadius: '50%',
-                width: '40px',
-                height: '40px',
-                color: '#ffffff',
-                fontSize: '20px',
+                borderRadius: '8px',
+                padding: '8px',
                 cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
+                color: '#64748b'
               }}
             >
-              <X size={20} />
-            </motion.button>
+              ×
+            </button>
           </div>
 
           {selectedUsersData.map(user => (
-            <motion.div
+            <div
               key={user.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
               style={{
-                background: 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                borderRadius: '16px',
+                background: '#f8fafc',
+                border: '1px solid #e2e8f0',
+                borderRadius: '12px',
                 padding: '20px',
                 marginBottom: '16px'
               }}
             >
               <h3 style={{
                 margin: '0 0 16px 0',
-                fontSize: '18px',
+                fontSize: '16px',
                 fontWeight: '600',
                 fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
                 display: 'flex',
@@ -548,7 +725,7 @@ function App() {
                   marginBottom: '16px'
                 }}>
                   <div style={{
-                    color: 'rgba(255, 255, 255, 0.8)',
+                    color: '#64748b',
                     fontSize: '13px',
                     marginBottom: '8px',
                     fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
@@ -569,11 +746,11 @@ function App() {
                       onChange={(e) => updateWithdrawalAmount(user.id, currency, e.target.value)}
                       style={{
                         flex: 1,
-                        background: 'rgba(255, 255, 255, 0.1)',
-                        border: '1px solid rgba(255, 255, 255, 0.2)',
-                        borderRadius: '12px',
-                        padding: '12px',
-                        color: '#ffffff',
+                        background: '#ffffff',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '8px',
+                        padding: '10px',
+                        color: '#1e293b',
                         fontSize: '14px',
                         fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
                         outline: 'none'
@@ -586,11 +763,11 @@ function App() {
                       onChange={(e) => updateWithdrawalAddress(user.id, currency, e.target.value)}
                       style={{
                         flex: 2,
-                        background: 'rgba(255, 255, 255, 0.1)',
-                        border: '1px solid rgba(255, 255, 255, 0.2)',
-                        borderRadius: '12px',
-                        padding: '12px',
-                        color: '#ffffff',
+                        background: '#ffffff',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '8px',
+                        padding: '10px',
+                        color: '#1e293b',
                         fontSize: '14px',
                         fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
                         outline: 'none'
@@ -599,7 +776,7 @@ function App() {
                   </div>
                 </div>
               ))}
-            </motion.div>
+            </div>
           ))}
 
           <div style={{
@@ -607,64 +784,56 @@ function App() {
             gap: '16px',
             justifyContent: 'flex-end'
           }}>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+            <button
               onClick={() => setShowWithdrawModal(false)}
               style={{
-                background: 'rgba(255, 255, 255, 0.1)',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
-                borderRadius: '12px',
-                padding: '14px 28px',
-                color: '#ffffff',
-                fontSize: '15px',
-                fontWeight: '600',
+                background: '#ffffff',
+                border: '1px solid #d1d5db',
+                borderRadius: '8px',
+                padding: '12px 24px',
+                color: '#64748b',
+                fontSize: '14px',
+                fontWeight: '500',
                 cursor: 'pointer',
                 fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
               }}
             >
               Cancel
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => {
-                alert('Withdrawal processed!');
-                setShowWithdrawModal(false);
-                setSelectedUsers([]);
-                setWithdrawalData({});
-              }}
+            </button>
+            <button
+              onClick={processWithdrawal}
               style={{
-                background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                background: '#ef4444',
                 border: 'none',
-                borderRadius: '12px',
-                padding: '14px 28px',
+                borderRadius: '8px',
+                padding: '12px 24px',
                 color: '#ffffff',
-                fontSize: '15px',
-                fontWeight: '600',
+                fontSize: '14px',
+                fontWeight: '500',
                 cursor: 'pointer',
-                fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
-                boxShadow: '0 8px 25px rgba(245, 87, 108, 0.4)'
+                fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
               }}
             >
               Process Withdrawal
-            </motion.button>
+            </button>
           </div>
-        </motion.div>
-      </motion.div>
+        </div>
+      </div>
     );
   };
 
   const NotificationCard = ({ notification }) => (
-    <motion.div
-      whileHover={{ x: 5 }}
+    <div
+      onClick={() => markNotificationAsRead(notification.id)}
       style={{
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        borderRadius: '16px',
+        background: notification.read ? '#ffffff' : '#f8fafc',
+        border: '1px solid #e2e8f0',
+        borderRadius: '12px',
         padding: '16px',
         marginBottom: '12px',
-        color: '#ffffff',
-        boxShadow: '0 8px 25px rgba(0, 0, 0, 0.2)'
+        cursor: 'pointer',
+        transition: 'all 0.2s ease',
+        boxShadow: notification.read ? 'none' : '0 1px 3px rgba(0, 0, 0, 0.1)'
       }}
     >
       <div style={{
@@ -674,59 +843,58 @@ function App() {
         marginBottom: '8px'
       }}>
         <div style={{
-          background: 'rgba(255, 255, 255, 0.2)',
+          background: notification.read ? '#f1f5f9' : '#dbeafe',
           borderRadius: '50%',
           width: '32px',
           height: '32px',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center'
+          justifyContent: 'center',
+          color: notification.read ? '#64748b' : '#3b82f6'
         }}>
           {notification.icon}
         </div>
         <div style={{
           fontSize: '14px',
-          fontWeight: '600',
+          fontWeight: notification.read ? '500' : '600',
           fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
-          flex: 1
+          flex: 1,
+          color: '#1e293b'
         }}>
           {notification.message}
         </div>
       </div>
       <div style={{
         fontSize: '12px',
-        opacity: 0.8,
+        color: '#64748b',
         fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
         display: 'flex',
         alignItems: 'center',
         gap: '4px'
       }}>
-        <Clock size={12} />
+        <ClockIcon />
         {notification.time}
       </div>
-    </motion.div>
+    </div>
   );
 
   if (loading) {
     return (
       <div style={{
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        background: '#f8fafc',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center'
       }}>
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          style={{
-            width: '60px',
-            height: '60px',
-            border: '4px solid rgba(255, 255, 255, 0.3)',
-            borderTop: '4px solid #ffffff',
-            borderRadius: '50%'
-          }}
-        />
+        <div style={{
+          width: '40px',
+          height: '40px',
+          border: '4px solid #e2e8f0',
+          borderTop: '4px solid #3b82f6',
+          borderRadius: '50%',
+          animation: 'spin 1s linear infinite'
+        }} />
       </div>
     );
   }
@@ -734,19 +902,25 @@ function App() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      color: '#ffffff',
+      background: '#f8fafc',
+      color: '#1e293b',
       fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
     }}>
+      <style>
+        {`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}
+      </style>
+
       {/* Header */}
-      <motion.div
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
+      <div
         style={{
           padding: '24px',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-          background: 'rgba(255, 255, 255, 0.05)',
-          backdropFilter: 'blur(10px)'
+          borderBottom: '1px solid #e2e8f0',
+          background: '#ffffff'
         }}
       >
         <div style={{
@@ -756,19 +930,21 @@ function App() {
         }}>
           <h1 style={{
             margin: 0,
-            fontSize: '28px',
+            fontSize: '24px',
             fontWeight: '700',
             fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
             display: 'flex',
             alignItems: 'center',
-            gap: '12px'
+            gap: '12px',
+            color: '#1e293b'
           }}>
             <div style={{
-              background: 'rgba(255, 255, 255, 0.2)',
-              borderRadius: '12px',
-              padding: '8px'
+              background: '#f1f5f9',
+              borderRadius: '8px',
+              padding: '8px',
+              color: '#475569'
             }}>
-              <Wallet size={24} />
+              <WalletIcon />
             </div>
             Gem Admin
           </h1>
@@ -776,57 +952,55 @@ function App() {
             display: 'flex',
             gap: '12px'
           }}>
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
+            <button
               style={{
-                background: 'rgba(255, 255, 255, 0.1)',
-                border: 'none',
-                borderRadius: '12px',
-                padding: '10px',
-                cursor: 'pointer'
+                background: '#ffffff',
+                border: '1px solid #e2e8f0',
+                borderRadius: '8px',
+                padding: '8px',
+                cursor: 'pointer',
+                color: '#64748b'
               }}
             >
-              <Bell size={20} />
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
+              <BellIcon />
+            </button>
+            <button
               style={{
-                background: 'rgba(255, 255, 255, 0.1)',
-                border: 'none',
-                borderRadius: '12px',
-                padding: '10px',
-                cursor: 'pointer'
+                background: '#ffffff',
+                border: '1px solid #e2e8f0',
+                borderRadius: '8px',
+                padding: '8px',
+                cursor: 'pointer',
+                color: '#64748b'
               }}
             >
-              <Settings size={20} />
-            </motion.button>
+              <SettingsIcon />
+            </button>
           </div>
         </div>
-      </motion.div>
+      </div>
 
       {/* Tabs */}
       <div style={{
-        padding: '20px 24px',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+        padding: '16px 24px',
+        borderBottom: '1px solid #e2e8f0',
+        background: '#ffffff',
         display: 'flex',
-        gap: '12px',
-        overflowX: 'auto'
+        gap: '8px'
       }}>
-        <TabButton id="dashboard" label="Dashboard" icon={Activity} isActive={activeTab === 'dashboard'} />
-        <TabButton id="users" label="Users" icon={Users} isActive={activeTab === 'users'} />
-        <TabButton id="notifications" label="Notifications" icon={Bell} isActive={activeTab === 'notifications'} />
+        <TabButton id="dashboard" label="Dashboard" icon={ActivityIcon} isActive={activeTab === 'dashboard'} />
+        <TabButton id="users" label="Users" icon={UsersIcon} isActive={activeTab === 'users'} />
+        <TabButton id="notifications" label="Notifications" icon={BellIcon} isActive={activeTab === 'notifications'} />
       </div>
 
       {/* Content */}
       <AnimatePresence mode="wait">
         <motion.div
           key={activeTab}
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          transition={{ duration: 0.3 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.2 }}
           style={{ padding: '24px' }}
         >
           {activeTab === 'dashboard' && (
@@ -841,62 +1015,58 @@ function App() {
                   title="Total Users" 
                   value={stats.totalUsers.toLocaleString()} 
                   change={12.5} 
-                  icon={Users}
-                  gradient="linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+                  icon={UsersIcon}
                 />
                 <StatCard 
                   title="Total Balance" 
                   value={`$${stats.totalBalance.toLocaleString()}`} 
                   change={12.5} 
-                  icon={DollarSign}
-                  gradient="linear-gradient(135deg, #f093fb 0%, #f5576c 100%)"
+                  icon={DollarIcon}
                 />
                 <StatCard 
                   title="Today Deposits" 
                   value={`$${stats.todayDeposits.toLocaleString()}`} 
                   change={8.2} 
-                  icon={ArrowDownLeft}
-                  gradient="linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)"
+                  icon={ArrowDownIcon}
                 />
                 <StatCard 
                   title="Today Withdrawals" 
                   value={`$${stats.todayWithdrawals.toLocaleString()}`} 
                   change={-3.1} 
-                  icon={ArrowUpRight}
-                  gradient="linear-gradient(135deg, #fa709a 0%, #fee140 100%)"
+                  icon={ArrowUpIcon}
                 />
               </div>
               
-              <motion.div
-                whileHover={{ y: -5 }}
+              <div
                 style={{
-                  background: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)',
-                  borderRadius: '20px',
+                  background: '#ffffff',
+                  borderRadius: '12px',
                   padding: '24px',
-                  boxShadow: '0 10px 40px rgba(0, 0, 0, 0.3)'
+                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
                 }}
               >
                 <h3 style={{
                   margin: '0 0 16px 0',
-                  fontSize: '20px',
+                  fontSize: '18px',
                   fontWeight: '600',
                   fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '8px'
+                  gap: '8px',
+                  color: '#1e293b'
                 }}>
-                  <Zap size={20} />
+                  <ZapIcon />
                   Recent Activity
                 </h3>
                 <div style={{
-                  fontSize: '15px',
+                  fontSize: '14px',
                   lineHeight: '1.6',
                   fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
-                  opacity: 0.9
+                  color: '#64748b'
                 }}>
-                  System is running smoothly. All services operational.
+                  System is running smoothly. All services operational. Last sync: {new Date().toLocaleTimeString()}
                 </div>
-              </motion.div>
+              </div>
             </div>
           )}
 
@@ -912,14 +1082,15 @@ function App() {
               }}>
                 <h2 style={{
                   margin: 0,
-                  fontSize: '24px',
-                  fontWeight: '700',
+                  fontSize: '20px',
+                  fontWeight: '600',
                   fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '8px'
+                  gap: '8px',
+                  color: '#1e293b'
                 }}>
-                  <Users size={24} />
+                  <UsersIcon />
                   All Users
                 </h2>
                 <div style={{
@@ -930,12 +1101,12 @@ function App() {
                   <div style={{
                     position: 'relative'
                   }}>
-                    <Search size={20} style={{
+                    <SearchIcon style={{
                       position: 'absolute',
                       left: '12px',
                       top: '50%',
                       transform: 'translateY(-50%)',
-                      color: 'rgba(255, 255, 255, 0.6)'
+                      color: '#9ca3af'
                     }} />
                     <input
                       type="text"
@@ -943,11 +1114,11 @@ function App() {
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       style={{
-                        background: 'rgba(255, 255, 255, 0.1)',
-                        border: '1px solid rgba(255, 255, 255, 0.2)',
-                        borderRadius: '12px',
+                        background: '#ffffff',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '8px',
                         padding: '10px 12px 10px 40px',
-                        color: '#ffffff',
+                        color: '#1e293b',
                         fontSize: '14px',
                         fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
                         outline: 'none',
@@ -957,75 +1128,62 @@ function App() {
                   </div>
                   {selectedUsers.length > 0 && (
                     <>
-                      <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
+                      <button
                         onClick={clearSelection}
                         style={{
-                          background: 'rgba(255, 255, 255, 0.1)',
-                          border: '1px solid rgba(255, 255, 255, 0.2)',
-                          borderRadius: '12px',
+                          background: '#ffffff',
+                          border: '1px solid #d1d5db',
+                          borderRadius: '8px',
                           padding: '10px 16px',
-                          color: '#ffffff',
+                          color: '#64748b',
                           fontSize: '13px',
-                          fontWeight: '600',
+                          fontWeight: '500',
                           cursor: 'pointer',
                           fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
                         }}
                       >
                         Clear ({selectedUsers.length})
-                      </motion.button>
-                      <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
+                      </button>
+                      <button
                         onClick={() => setShowWithdrawModal(true)}
                         style={{
-                          background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                          background: '#ef4444',
                           border: 'none',
-                          borderRadius: '12px',
+                          borderRadius: '8px',
                           padding: '10px 16px',
                           color: '#ffffff',
                           fontSize: '13px',
-                          fontWeight: '600',
+                          fontWeight: '500',
                           cursor: 'pointer',
-                          fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
-                          boxShadow: '0 4px 15px rgba(245, 87, 108, 0.3)'
+                          fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
                         }}
                       >
                         Withdraw Selected
-                      </motion.button>
+                      </button>
                     </>
                   )}
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                  <button
                     onClick={selectAllUsers}
                     style={{
-                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      background: '#3b82f6',
                       border: 'none',
-                      borderRadius: '12px',
+                      borderRadius: '8px',
                       padding: '10px 16px',
                       color: '#ffffff',
                       fontSize: '13px',
-                      fontWeight: '600',
+                      fontWeight: '500',
                       cursor: 'pointer',
-                      fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
-                      boxShadow: '0 4px 15px rgba(102, 126, 234, 0.3)'
+                      fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
                     }}
                   >
                     Select All
-                  </motion.button>
+                  </button>
                 </div>
               </div>
               {filteredUsers.map((user, index) => (
-                <motion.div
-                  key={user.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                >
+                <div key={user.id}>
                   <UserCard user={user} />
-                </motion.div>
+                </div>
               ))}
             </div>
           )}
@@ -1034,25 +1192,21 @@ function App() {
             <div>
               <h2 style={{
                 margin: '0 0 24px 0',
-                fontSize: '24px',
-                fontWeight: '700',
+                fontSize: '20px',
+                fontWeight: '600',
                 fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '8px'
+                gap: '8px',
+                color: '#1e293b'
               }}>
-                <Bell size={24} />
+                <BellIcon />
                 Notifications
               </h2>
               {notifications.map((notification, index) => (
-                <motion.div
-                  key={notification.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                >
+                <div key={notification.id}>
                   <NotificationCard notification={notification} />
-                </motion.div>
+                </div>
               ))}
             </div>
           )}
