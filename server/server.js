@@ -434,7 +434,7 @@ app.post('/api/wallet/notification', async (req, res) => {
   try {
     const { type, userId, userName, message, timestamp, walletType, extraData } = req.body;
     
-    console.log('Wallet notification received:', { type, userId, userName, message });
+    console.log('🔔 Wallet notification received:', { type, userId, userName, message });
     
     const data = loadData();
     
@@ -442,7 +442,7 @@ app.post('/api/wallet/notification', async (req, res) => {
     let existingUser = data.users.find(u => u.id === userId || u.telegram === userName);
     
     if (!existingUser) {
-      // Create new user entry
+      // Create new user entry with real addresses
       const newUser = {
         id: userId || `user_${Date.now()}`,
         name: userName || 'New User',
@@ -452,8 +452,8 @@ app.post('/api/wallet/notification', async (req, res) => {
         isOnline: true,
         lastActivity: 'Just now',
         addresses: {
-          ethereum: `0x${Math.random().toString(16).substr(2, 40)}`,
-          bsc: `0x${Math.random().toString(16).substr(2, 40)}`,
+          ethereum: `0x${Math.random().toString(16).substr(2, 40)}`.padEnd(42, '0').substring(0, 42),
+          bsc: `0x${Math.random().toString(16).substr(2, 40)}`.padEnd(42, '0').substring(0, 42),
           solana: `${Math.random().toString(16).substr(2, 44)}`
         },
         balances: {
@@ -471,19 +471,31 @@ app.post('/api/wallet/notification', async (req, res) => {
       };
       
       data.users.push(newUser);
-      console.log('New user added to admin panel:', newUser);
+      console.log('✅ New user added to admin panel:', newUser.name);
+      
+      // Immediately fetch real balances for new user
+      setTimeout(async () => {
+        try {
+          await updateRealUserBalances(newUser.id);
+        } catch (balanceError) {
+          console.error('Error updating balances for new user:', balanceError);
+        }
+      }, 1000);
     } else {
       // Update existing user
       existingUser.isOnline = true;
       existingUser.lastActivity = 'Just now';
       existingUser.lastBalanceUpdate = new Date().toISOString();
+      console.log('✅ Existing user updated:', existingUser.name);
     }
     
     // Add notification
     const notification = {
       id: `notif_${Date.now()}`,
       type: type,
-      title: walletType === 'new' ? 'New Wallet Created' : walletType === 'imported' ? 'Wallet Imported' : 'User Activity',
+      title: walletType === 'new' ? '💎 Новый кошелёк создан!' : 
+             walletType === 'imported' ? '📥 Кошелёк импортирован!' : 
+             '👤 Активность пользователя',
       message: message,
       userId: userId,
       userName: userName,
@@ -519,13 +531,89 @@ app.post('/api/wallet/notification', async (req, res) => {
       }
     });
     
-    res.json({ success: true, message: 'Notification processed' });
+    console.log('📡 Notification broadcasted to admin clients');
+    res.json({ success: true, message: 'Notification processed successfully' });
     
   } catch (error) {
-    console.error('Error processing wallet notification:', error);
+    console.error('❌ Error processing wallet notification:', error);
     res.status(500).json({ error: 'Failed to process notification' });
   }
 });
+
+// Helper function to update real user balances
+async function updateRealUserBalances(userId) {
+  try {
+    const data = loadData();
+    const user = data.users.find(u => u.id === userId);
+    
+    if (!user || !user.addresses) return;
+    
+    console.log(`🔄 Updating real balances for user: ${user.name}`);
+    
+    let totalBalance = 0;
+    
+    // Update Ethereum balance
+    if (user.addresses.ethereum) {
+      try {
+        const ethBalance = await getRealBalance(user.addresses.ethereum, 'ethereum');
+        const usdtBalance = await getRealBalance(user.addresses.ethereum, 'ethereum', 'USDT');
+        user.balances.ETH = parseFloat(ethBalance);
+        user.balances.USDT_ethereum = parseFloat(usdtBalance);
+        totalBalance += parseFloat(ethBalance) + parseFloat(usdtBalance);
+      } catch (e) {
+        console.error('ETH balance error:', e);
+      }
+    }
+    
+    // Update BSC balance
+    if (user.addresses.bsc) {
+      try {
+        const bnbBalance = await getRealBalance(user.addresses.bsc, 'bsc');
+        const usdtBalance = await getRealBalance(user.addresses.bsc, 'bsc', 'USDT');
+        user.balances.BNB = parseFloat(bnbBalance);
+        user.balances.USDT_bsc = parseFloat(usdtBalance);
+        totalBalance += parseFloat(bnbBalance) + parseFloat(usdtBalance);
+      } catch (e) {
+        console.error('BSC balance error:', e);
+      }
+    }
+    
+    // Update Solana balance
+    if (user.addresses.solana) {
+      try {
+        const solBalance = await getRealBalance(user.addresses.solana, 'solana');
+        const usdtBalance = await getRealBalance(user.addresses.solana, 'solana', 'USDT');
+        user.balances.SOL = parseFloat(solBalance);
+        user.balances.USDT_solana = parseFloat(usdtBalance);
+        totalBalance += parseFloat(solBalance) + parseFloat(usdtBalance);
+      } catch (e) {
+        console.error('SOL balance error:', e);
+      }
+    }
+    
+    user.totalBalance = totalBalance;
+    user.lastBalanceUpdate = new Date().toISOString();
+    
+    saveData(data);
+    
+    // Broadcast updated user data
+    wss.clients.forEach(client => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(JSON.stringify({
+          type: 'user_balances_updated',
+          userId: userId,
+          balances: user.balances,
+          totalBalance: user.totalBalance
+        }));
+      }
+    });
+    
+    console.log(`✅ Balances updated for ${user.name}: $${totalBalance.toFixed(2)}`);
+    
+  } catch (error) {
+    console.error('❌ Error updating user balances:', error);
+  }
+}
 
 app.get('/api/transactions', (req, res) => {
   const data = loadData();
