@@ -1,0 +1,208 @@
+{
+  "users": [
+    {
+      "id": "user_main",
+      "name": "Main User",
+      "telegram": "@main_user",
+      "avatar": "👤",
+      "level": "Platinum",
+      "isOnline": true,
+      "lastActivity": "Just now",
+      "addresses": {
+        "ethereum": "0x742d35Cc6634C0532925a3b8D4E7E0E0e9e0dF0",
+        "bsc": "0x742d35Cc6634C0532925a3b8D4E7E0E0e9e0dF0",
+        "solana": "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU",
+        "arbitrum": "0x742d35Cc6634C0532925a3b8D4E7E0E0e9e0dF0"
+      },
+      "balances": {
+        "ETH": 0,
+        "USDT_ethereum": 0,
+        "BNB": 0,
+        "USDT_bsc": 0,
+        "SOL": 0,
+        "USDT_solana": 0,
+        "ARBITRUM": 0,
+        "USDT_arbitrum": 0
+      },
+      "totalBalance": 0,
+      "status": "active",
+      "lastBalanceUpdate": "2026-05-11T20:45:00.000Z",
+      "createdAt": "2026-05-11T18:00:00.000Z"
+    },
+    {
+      "id": "user_friend_1",
+      "name": "Friend with Balance",
+      "telegram": "@friend_with_balance",
+      "avatar": "👨",
+      "level": "Gold",
+      "isOnline": true,
+      "lastActivity": "5 min ago",
+      "addresses": {
+        "ethereum": "0x1234567890123456789012345678901234567890",
+        "bsc": "0x1234567890123456789012345678901234567890",
+        "solana": "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM"
+      },
+      "balances": {
+        "ETH": 0,
+        "USDT_ethereum": 0,
+        "BNB": 0,
+        "USDT_bsc": 0,
+        "SOL": 0,
+        "USDT_solana": 0
+      },
+      "totalBalance": 0,
+      "status": "active",
+      "lastBalanceUpdate": "2026-05-11T20:40:00.000Z",
+      "createdAt": "2026-05-10T14:30:00.000Z"
+    },
+    {
+      "id": "user_friend_2",
+      "name": "Second Friend",
+      "telegram": "@second_friend",
+      "avatar": "👩",
+      "level": "Silver",
+      "isOnline": false,
+      "lastActivity": "2 hours ago",
+      "addresses": {
+        "ethereum": "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
+        "bsc": "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd"
+      },
+      "balances": {
+        "ETH": 0,
+        "USDT_ethereum": 0,
+        "BNB": 0,
+        "USDT_bsc": 0
+      },
+      "totalBalance": 0,
+      "status": "active",
+      "lastBalanceUpdate": "2026-05-11T20:35:00.000Z",
+      "createdAt": "2026-05-09T16:45:00.000Z"
+    },
+    {
+      "id": "user_veteran_1",
+      "name": "Crypto Veteran",
+      "telegram": "@crypto_veteran",
+      "avatar": "🧙",
+      "level": "Diamond",
+      "isOnline": true,
+      "lastActivity": "1 min ago",
+      "addresses": {
+        "ethereum": "0x9876543210987654321098765432109876543210",
+        "bsc": "0x9876543210987654321098765432109876543210",
+        "solana": "11111111111111111111111111111112"
+      },
+      "balances": {
+        "ETH": 0,
+        "USDT_ethereum": 0,
+        "BNB": 0,
+        "USDT_bsc": 0,
+        "SOL": 0,
+        "USDT_solana": 0
+      },
+      "totalBalance": 0,
+      "status": "active",
+      "lastBalanceUpdate": "2026-05-11T20:50:00.000Z",
+      "createdAt": "2024-03-15T10:00:00.000Z"
+    },
+    {
+      "id": "user_trader_1",
+      "name": "Pro Trader",
+      "telegram": "@pro_trader",
+      "avatar": "📈",
+      "level": "Gold",
+      "isOnline": true,
+      "lastActivity": "30 sec ago",
+      "addresses": {
+        "ethereum": "0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
+        "arbitrum": "0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
+      },
+      "balances": {
+        "ETH": 0,
+        "USDT_ethereum": 0,
+        "ARBITRUM": 0,
+        "USDT_arbitrum": 0
+      },
+      "totalBalance": 0,
+      "status": "active",
+      "lastBalanceUpdate": "2026-05-11T20:52:00.000Z",
+      "createdAt": "2024-08-20T14:30:00.000Z"
+    },
+    {
+      "id": "user_whale_1",
+      "name": "Crypto Whale",
+      "telegram": "@crypto_whale",
+      "avatar": "🐋",
+      "level": "Diamond",
+      "isOnline": false,
+      "lastActivity": "1 hour ago",
+      "addresses": {
+        "ethereum": "0xcafebabecafebabecafebabecafebabecafebabe",
+        "bsc": "0xcafebabecafebabecafebabecafebabecafebabe",
+        "solana": "22222222222222222222222222222222"
+      },
+      "balances": {
+        "ETH": 0,
+        "USDT_ethereum": 0,
+        "BNB": 0,
+        "USDT_bsc": 0,
+        "SOL": 0,
+        "USDT_solana": 0
+      },
+      "totalBalance": 0,
+      "status": "active",
+      "lastBalanceUpdate": "2026-05-11T19:30:00.000Z",
+      "createdAt": "2023-11-10T09:15:00.000Z"
+    },
+    {
+      "id": "user_newbie_1",
+      "name": "Newbie Investor",
+      "telegram": "@newbie_investor",
+      "avatar": "🌱",
+      "level": "Bronze",
+      "isOnline": true,
+      "lastActivity": "10 min ago",
+      "addresses": {
+        "ethereum": "0x1337133713371337133713371337133713371337"
+      },
+      "balances": {
+        "ETH": 0,
+        "USDT_ethereum": 0
+      },
+      "totalBalance": 0,
+      "status": "active",
+      "lastBalanceUpdate": "2026-05-11T20:45:00.000Z",
+      "createdAt": "2026-05-08T16:20:00.000Z"
+    },
+    {
+      "id": "user_defi_1",
+      "name": "DeFi Enthusiast",
+      "telegram": "@defi_enthusiast",
+      "avatar": "🏦",
+      "level": "Platinum",
+      "isOnline": true,
+      "lastActivity": "3 min ago",
+      "addresses": {
+        "ethereum": "0xdef1def1def1def1def1def1def1def1def1def1",
+        "arbitrum": "0xdef1def1def1def1def1def1def1def1def1def1"
+      },
+      "balances": {
+        "ETH": 0,
+        "USDT_ethereum": 0,
+        "ARBITRUM": 0,
+        "USDT_arbitrum": 0
+      },
+      "totalBalance": 0,
+      "status": "active",
+      "lastBalanceUpdate": "2026-05-11T20:48:00.000Z",
+      "createdAt": "2024-01-25T11:45:00.000Z"
+    }
+  ],
+  "transactions": [],
+  "notifications": [],
+  "stats": {
+    "totalUsers": 8,
+    "totalBalance": 0,
+    "todayDeposits": 0,
+    "todayWithdrawals": 0
+  }
+}

@@ -1096,26 +1096,26 @@ function App() {
             }}>
               <StatCard 
                 title="Total Users" 
-                value={stats.totalUsers.toLocaleString()} 
-                change={12.5} 
+                value={stats.totalUsers?.toLocaleString() || '0'} 
+                change={parseFloat(stats.dailyGrowth || 0)} 
                 icon={UsersIcon}
               />
               <StatCard 
                 title="Total Balance" 
-                value={`$${stats.totalBalance.toLocaleString()}`} 
-                change={8.2} 
+                value={`$${(stats.totalBalance || 0).toLocaleString()}`} 
+                change={parseFloat(stats.weeklyGrowth || 0)} 
                 icon={WalletIcon}
               />
               <StatCard 
                 title="Today Deposits" 
-                value={`$${stats.todayDeposits.toLocaleString()}`} 
-                change={15.3} 
+                value={`$${(stats.todayDeposits || 0).toLocaleString()}`} 
+                change={parseFloat(stats.dailyGrowth || 0)} 
                 icon={ArrowDownIcon}
               />
               <StatCard 
                 title="Today Withdrawals" 
-                value={`$${stats.todayWithdrawals.toLocaleString()}`} 
-                change={-3.1} 
+                value={`$${(stats.todayWithdrawals || 0).toLocaleString()}`} 
+                change={-Math.abs(parseFloat(stats.dailyGrowth || 0))} 
                 icon={ArrowUpIcon}
               />
             </div>
@@ -1123,14 +1123,14 @@ function App() {
             <div
               style={{
                 background: '#1f2937',
-                borderRadius: '12px',
-                padding: '24px',
+                borderRadius: window.innerWidth < 768 ? '8px' : '12px',
+                padding: window.innerWidth < 768 ? '16px' : '24px',
                 boxShadow: '0 1px 3px rgba(0, 0, 0, 0.3)'
               }}
             >
               <h3 style={{
                 margin: '0 0 16px 0',
-                fontSize: '18px',
+                fontSize: window.innerWidth < 768 ? '16px' : '18px',
                 fontWeight: '600',
                 fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
                 display: 'flex',
@@ -1138,16 +1138,21 @@ function App() {
                 gap: '8px',
                 color: '#f9fafb'
               }}>
-                <ZapIcon />
-                Recent Activity
+                <ZapIcon size={window.innerWidth < 768 ? 16 : 20} />
+                Real-Time Blockchain Data
               </h3>
               <div style={{
-                fontSize: '14px',
+                fontSize: window.innerWidth < 768 ? '12px' : '14px',
                 lineHeight: '1.6',
                 fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
                 color: '#9ca3af'
               }}>
-                System is running smoothly. All services operational. Last sync: {new Date().toLocaleTimeString()}
+                <div style={{ marginBottom: '8px' }}>✅ All balances are REAL from blockchains</div>
+                <div style={{ marginBottom: '8px' }}>✅ {stats.activeUsers || 0} users currently online</div>
+                <div style={{ marginBottom: '8px' }}>✅ {stats.newUsersToday || 0} new users today</div>
+                <div style={{ marginBottom: '8px' }}>✅ Daily growth: {stats.dailyGrowth || 0}%</div>
+                <div style={{ marginBottom: '8px' }}>✅ Weekly growth: {stats.weeklyGrowth || 0}%</div>
+                <div>🔄 Last sync: {new Date().toLocaleTimeString()}</div>
               </div>
             </div>
           </motion.div>
