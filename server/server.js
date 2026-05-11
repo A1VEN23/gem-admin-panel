@@ -476,37 +476,33 @@ app.post('/api/wallet/notification', async (req, res) => {
         }
       }, 1000);
     } else {
-      // Update existing user activity
+      // Update existing user
       existingUser.isOnline = true;
       existingUser.lastActivity = 'Just now';
       existingUser.lastBalanceUpdate = new Date().toISOString();
       
-      // Update user level based on activity
-      if (type === 'user_activity' && existingUser.hasWallet) {
-        // Increase activity score for returning users
-        existingUser.activityScore = (existingUser.activityScore || 0) + 1;
-        
-        // Update level based on activity
-        if (existingUser.activityScore >= 50) {
-          existingUser.level = 'Diamond';
-        } else if (existingUser.activityScore >= 25) {
-          existingUser.level = 'Platinum';
-        } else if (existingUser.activityScore >= 10) {
-          existingUser.level = 'Gold';
-        } else if (existingUser.activityScore >= 5) {
-          existingUser.level = 'Silver';
-        }
+      // Update user level based on total balance
+      if (existingUser.totalBalance > 100000) {
+        existingUser.level = 'Diamond';
+      } else if (existingUser.totalBalance > 50000) {
+        existingUser.level = 'Platinum';
+      } else if (existingUser.totalBalance > 10000) {
+        existingUser.level = 'Gold';
+      } else if (existingUser.totalBalance > 1000) {
+        existingUser.level = 'Silver';
+      } else {
+        existingUser.level = 'Bronze';
       }
       
       console.log('✅ Existing user updated:', existingUser.name, 'Level:', existingUser.level);
     }
     
     // Add notification with proper titles
-    let notificationTitle = '👤 Активность пользователя';
+    let notificationTitle = '� Уведомление';
     if (type === 'new_user') {
       notificationTitle = walletType === 'none' ? '👁 Новый пользователь зашёл!' : '👤 Новый пользователь';
-    } else if (type === 'user_activity') {
-      notificationTitle = '🚀 Пользователь запустил бота!';
+    } else if (type === 'deposit') {
+      notificationTitle = '� Пополнение баланса!';
     } else if (walletType === 'new') {
       notificationTitle = '💎 Новый кошелёк создан!';
     } else if (walletType === 'imported') {
