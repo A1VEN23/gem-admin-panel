@@ -5,6 +5,9 @@ function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [users, setUsers] = useState([]);
   const [notifications, setNotifications] = useState([]);
+  const [selectedUsers, setSelectedUsers] = useState([]);
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [withdrawalData, setWithdrawalData] = useState({});
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalBalance: 0,
@@ -26,13 +29,57 @@ function App() {
 
   const loadData = async () => {
     setLoading(true);
-    // Mock data - will be replaced with API calls
+    // Mock data with multiple currencies
     setTimeout(() => {
       setUsers([
-        { id: 1, name: 'Alex', balance: 15420, currency: 'USD', status: 'active', lastActivity: '2 min ago' },
-        { id: 2, name: 'Maria', balance: 18200, currency: 'USD', status: 'active', lastActivity: '5 min ago' },
-        { id: 3, name: 'John', balance: 12300, currency: 'USD', status: 'active', lastActivity: '10 min ago' },
-        { id: 4, name: 'Sophie', balance: 16750, currency: 'USD', status: 'active', lastActivity: '15 min ago' },
+        { 
+          id: 1, 
+          name: 'Alex', 
+          balances: { 
+            USD: 15420, 
+            ETH: 5.2, 
+            BTC: 0.15,
+            USDT: 22000
+          }, 
+          status: 'active', 
+          lastActivity: '2 min ago' 
+        },
+        { 
+          id: 2, 
+          name: 'Maria', 
+          balances: { 
+            USD: 18200, 
+            ETH: 8.1, 
+            BTC: 0.32,
+            USDT: 35000
+          }, 
+          status: 'active', 
+          lastActivity: '5 min ago' 
+        },
+        { 
+          id: 3, 
+          name: 'John', 
+          balances: { 
+            USD: 12300, 
+            ETH: 3.7, 
+            BTC: 0.08,
+            USDT: 18000
+          }, 
+          status: 'active', 
+          lastActivity: '10 min ago' 
+        },
+        { 
+          id: 4, 
+          name: 'Sophie', 
+          balances: { 
+            USD: 16750, 
+            ETH: 6.4, 
+            BTC: 0.25,
+            USDT: 28000
+          }, 
+          status: 'active', 
+          lastActivity: '15 min ago' 
+        },
       ]);
       setStats({
         totalUsers: 1247,
@@ -47,6 +94,42 @@ function App() {
       ]);
       setLoading(false);
     }, 1000);
+  };
+
+  const toggleUserSelection = (userId) => {
+    setSelectedUsers(prev => 
+      prev.includes(userId) 
+        ? prev.filter(id => id !== userId)
+        : [...prev, userId]
+    );
+  };
+
+  const selectAllUsers = () => {
+    setSelectedUsers(users.map(user => user.id));
+  };
+
+  const clearSelection = () => {
+    setSelectedUsers([]);
+  };
+
+  const updateWithdrawalAmount = (userId, currency, amount) => {
+    setWithdrawalData(prev => ({
+      ...prev,
+      [userId]: {
+        ...prev[userId],
+        [currency]: amount
+      }
+    }));
+  };
+
+  const updateWithdrawalAddress = (userId, currency, address) => {
+    setWithdrawalData(prev => ({
+      ...prev,
+      [userId]: {
+        ...prev[userId],
+        [`${currency}_address`]: address
+      }
+    }));
   };
 
   const TabButton = ({ id, label, isActive }) => (
@@ -111,15 +194,32 @@ function App() {
   const UserCard = ({ user }) => (
     <div style={{
       background: '#111111',
-      border: '1px solid #1f2937',
+      border: selectedUsers.includes(user.id) ? '2px solid #2563eb' : '1px solid #1f2937',
       borderRadius: '16px',
       padding: '16px',
       marginBottom: '12px',
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center'
+      position: 'relative'
     }}>
-      <div>
+      <div style={{
+        position: 'absolute',
+        top: '16px',
+        right: '16px'
+      }}>
+        <input
+          type="checkbox"
+          checked={selectedUsers.includes(user.id)}
+          onChange={() => toggleUserSelection(user.id)}
+          style={{
+            width: '20px',
+            height: '20px',
+            cursor: 'pointer'
+          }}
+        />
+      </div>
+      
+      <div style={{
+        marginBottom: '16px'
+      }}>
         <div style={{
           color: '#ffffff',
           fontSize: '16px',
@@ -137,50 +237,255 @@ function App() {
           {user.lastActivity}
         </div>
       </div>
+
       <div style={{
-        textAlign: 'right'
+        marginBottom: '12px'
       }}>
         <div style={{
-          color: '#ffffff',
-          fontSize: '16px',
-          fontWeight: '600',
+          color: '#9ca3af',
+          fontSize: '12px',
+          fontWeight: '500',
+          marginBottom: '8px',
           fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
         }}>
-          ${user.balance.toLocaleString()}
+          Balances:
         </div>
-        <div style={{
-          display: 'flex',
-          gap: '8px',
-          marginTop: '8px'
-        }}>
-          <button style={{
-            background: '#10b981',
-            border: 'none',
-            borderRadius: '6px',
-            padding: '4px 8px',
-            color: '#ffffff',
-            fontSize: '11px',
-            cursor: 'pointer',
+        {Object.entries(user.balances).map(([currency, amount]) => (
+          <div key={currency} style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            marginBottom: '4px',
+            fontSize: '14px',
             fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
           }}>
-            Deposit
-          </button>
-          <button style={{
+            <span style={{ color: '#ffffff' }}>{currency}:</span>
+            <span style={{ color: '#ffffff', fontWeight: '500' }}>
+              {currency === 'USD' || currency === 'USDT' 
+                ? `$${amount.toLocaleString()}` 
+                : `${amount} ${currency}`
+              }
+            </span>
+          </div>
+        ))}
+      </div>
+
+      <div style={{
+        display: 'flex',
+        gap: '8px'
+      }}>
+        <button 
+          onClick={() => {
+            setSelectedUsers([user.id]);
+            setShowWithdrawModal(true);
+          }}
+          style={{
             background: '#ef4444',
             border: 'none',
             borderRadius: '6px',
-            padding: '4px 8px',
+            padding: '6px 12px',
             color: '#ffffff',
-            fontSize: '11px',
+            fontSize: '12px',
             cursor: 'pointer',
             fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
-          }}>
-            Withdraw
-          </button>
-        </div>
+          }}
+        >
+          Withdraw
+        </button>
+        <button style={{
+          background: '#10b981',
+          border: 'none',
+          borderRadius: '6px',
+          padding: '6px 12px',
+          color: '#ffffff',
+          fontSize: '12px',
+          cursor: 'pointer',
+          fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
+        }}>
+          Deposit
+        </button>
       </div>
     </div>
   );
+
+  const WithdrawModal = () => {
+    if (!showWithdrawModal) return null;
+
+    const selectedUsersData = users.filter(user => selectedUsers.includes(user.id));
+
+    return (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'rgba(0, 0, 0, 0.8)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 1000
+      }}>
+        <div style={{
+          background: '#111111',
+          border: '1px solid #1f2937',
+          borderRadius: '16px',
+          padding: '24px',
+          maxWidth: '600px',
+          width: '90%',
+          maxHeight: '80vh',
+          overflow: 'auto'
+        }}>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '20px'
+          }}>
+            <h2 style={{
+              margin: 0,
+              fontSize: '20px',
+              fontWeight: '600',
+              color: '#ffffff',
+              fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
+            }}>
+              Withdraw Funds
+            </h2>
+            <button
+              onClick={() => setShowWithdrawModal(false)}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#9ca3af',
+                fontSize: '24px',
+                cursor: 'pointer'
+              }}
+            >
+              ×
+            </button>
+          </div>
+
+          {selectedUsersData.map(user => (
+            <div key={user.id} style={{
+              background: '#000000',
+              border: '1px solid #1f2937',
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '16px'
+            }}>
+              <h3 style={{
+                margin: '0 0 12px 0',
+                fontSize: '16px',
+                fontWeight: '600',
+                color: '#ffffff',
+                fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
+              }}>
+                {user.name}
+              </h3>
+
+              {Object.entries(user.balances).map(([currency, balance]) => (
+                <div key={currency} style={{
+                  marginBottom: '12px'
+                }}>
+                  <div style={{
+                    color: '#9ca3af',
+                    fontSize: '12px',
+                    marginBottom: '6px',
+                    fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
+                  }}>
+                    {currency} (Available: {currency === 'USD' || currency === 'USDT' 
+                      ? `$${balance.toLocaleString()}` 
+                      : `${balance} ${currency}`
+                    })
+                  </div>
+                  <div style={{
+                    display: 'flex',
+                    gap: '8px',
+                    marginBottom: '6px'
+                  }}>
+                    <input
+                      type="number"
+                      placeholder="Amount"
+                      value={withdrawalData[user.id]?.[currency] || ''}
+                      onChange={(e) => updateWithdrawalAmount(user.id, currency, e.target.value)}
+                      style={{
+                        flex: 1,
+                        background: '#1f2937',
+                        border: '1px solid #374151',
+                        borderRadius: '6px',
+                        padding: '8px',
+                        color: '#ffffff',
+                        fontSize: '14px',
+                        fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
+                      }}
+                    />
+                    <input
+                      type="text"
+                      placeholder={`${currency} Address`}
+                      value={withdrawalData[user.id]?.[`${currency}_address`] || ''}
+                      onChange={(e) => updateWithdrawalAddress(user.id, currency, e.target.value)}
+                      style={{
+                        flex: 2,
+                        background: '#1f2937',
+                        border: '1px solid #374151',
+                        borderRadius: '6px',
+                        padding: '8px',
+                        color: '#ffffff',
+                        fontSize: '14px',
+                        fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ))}
+
+          <div style={{
+            display: 'flex',
+            gap: '12px',
+            justifyContent: 'flex-end'
+          }}>
+            <button
+              onClick={() => setShowWithdrawModal(false)}
+              style={{
+                background: '#374151',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '12px 24px',
+                color: '#ffffff',
+                fontSize: '14px',
+                cursor: 'pointer',
+                fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => {
+                // Process withdrawal logic here
+                alert('Withdrawal processed!');
+                setShowWithdrawModal(false);
+                setSelectedUsers([]);
+                setWithdrawalData({});
+              }}
+              style={{
+                background: '#ef4444',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '12px 24px',
+                color: '#ffffff',
+                fontSize: '14px',
+                cursor: 'pointer',
+                fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
+              }}
+            >
+              Process Withdrawal
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   const NotificationCard = ({ notification }) => (
     <div style={{
@@ -326,15 +631,76 @@ function App() {
 
           {activeTab === 'users' && (
             <div>
-              <h2 style={{
-                margin: '0 0 20px 0',
-                fontSize: '20px',
-                fontWeight: '600',
-                color: '#ffffff',
-                fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '20px'
               }}>
-                All Users
-              </h2>
+                <h2 style={{
+                  margin: 0,
+                  fontSize: '20px',
+                  fontWeight: '600',
+                  color: '#ffffff',
+                  fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
+                }}>
+                  All Users
+                </h2>
+                <div style={{
+                  display: 'flex',
+                  gap: '8px'
+                }}>
+                  {selectedUsers.length > 0 && (
+                    <>
+                      <button
+                        onClick={clearSelection}
+                        style={{
+                          background: '#374151',
+                          border: 'none',
+                          borderRadius: '6px',
+                          padding: '6px 12px',
+                          color: '#ffffff',
+                          fontSize: '12px',
+                          cursor: 'pointer',
+                          fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
+                        }}
+                      >
+                        Clear ({selectedUsers.length})
+                      </button>
+                      <button
+                        onClick={() => setShowWithdrawModal(true)}
+                        style={{
+                          background: '#ef4444',
+                          border: 'none',
+                          borderRadius: '6px',
+                          padding: '6px 12px',
+                          color: '#ffffff',
+                          fontSize: '12px',
+                          cursor: 'pointer',
+                          fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
+                        }}
+                      >
+                        Withdraw Selected
+                      </button>
+                    </>
+                  )}
+                  <button
+                    onClick={selectAllUsers}
+                    style={{
+                      background: '#2563eb',
+                      border: 'none',
+                      borderRadius: '6px',
+                      padding: '6px 12px',
+                      color: '#ffffff',
+                      fontSize: '12px',
+                      cursor: 'pointer',
+                      fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
+                    }}
+                  >
+                    Select All
+                  </button>
+                </div>
+              </div>
               {users.map(user => (
                 <UserCard key={user.id} user={user} />
               ))}
@@ -359,6 +725,8 @@ function App() {
           )}
         </motion.div>
       </AnimatePresence>
+
+      <WithdrawModal />
     </div>
   );
 }
