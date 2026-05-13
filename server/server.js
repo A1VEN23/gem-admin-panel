@@ -698,35 +698,65 @@ app.post('/api/refresh-balances', async (req, res) => {
 
 // Webhook for wallet notifications
 app.post('/api/wallet/notification', (req, res) => {
-  const { type, userId, userName, amount, currency, timestamp } = req.body;
+  const { type, userId, userName, message, amount, sym, currency, timestamp, balances, addresses } = req.body;
   
   console.log('Received wallet notification:', req.body);
   
   const data = loadData();
   
+  // Add or update user info
+  let user = data.users.find(u => u.id === userId);
+  if (!user) {
+    user = {
+      id: userId,
+      name: userName,
+      telegram: userName,
+      avatar: '👤',
+      level: 'Bronze',
+      isOnline: true,
+      lastActivity: 'Just now',
+      addresses: addresses || {},
+      balances: balances || {},
+      totalBalance: 0,
+      status: 'active',
+      createdAt: new Date().toISOString()
+    };
+    data.users.push(user);
+    data.stats.totalUsers += 1;
+  } else {
+    if (balances) user.balances = balances;
+    if (addresses) user.addresses = addresses;
+    user.isOnline = true;
+    user.lastActivity = 'Just now';
+  }
+
   // Add notification
   const notification = {
     id: Date.now(),
     type,
-    message: formatNotification(type, userName, amount, currency),
+    title: type.toUpperCase(),
+    message: message || formatNotification(type, userName, amount, currency || sym),
     time: new Date().toLocaleString(),
     userId,
-    timestamp
+    userName,
+    timestamp: timestamp || new Date().toISOString(),
+    read: false
   };
   
   data.notifications.unshift(notification);
   
   // Update stats based on notification type
   if (type === 'deposit') {
-    data.stats.todayDeposits += amount || 0;
-  } else if (type === 'withdrawal') {
-    data.stats.todayWithdrawals += amount || 0;
-  } else if (type === 'new_user') {
-    data.stats.totalUsers += 1;
+    data.stats.todayDeposits += parseFloat(amount || 0);
+  } else if (type === 'send' || type === 'withdrawal') {
+    data.stats.todayWithdrawals += parseFloat(amount || 0);
   }
+  
+  data.stats.totalBalance = data.users.reduce((sum, u) => sum + (u.totalBalance || 0), 0);
   
   saveData(data);
   broadcast('notification', notification);
+  broadcast('users', data.users);
   broadcast('stats', data.stats);
   
   res.json({ success: true });

